@@ -1,0 +1,2 @@
+#!/bin/bash
+mvn clean package; docker build -t "docker.openminted.eu/arc-service-for-myrto" ./service ; docker login --username=beta2_user --password=01041992s docker.openminted.eu ; docker push docker.openminted.eu/arc-service-for-myrto; ssh myrto@koulis.athenarc.gr 'docker login --username=beta2_user --password=01041992s docker.openminted.eu; docker container rm --force my-lovely-service; docker pull docker.openminted.eu/arc-service-for-myrto; docker run -d -p 8080:8080 --name my-lovely-service docker.openminted.eu/arc-service-for-myrto'
