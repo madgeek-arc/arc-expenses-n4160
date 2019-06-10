@@ -1,6 +1,7 @@
-package arc.expenses.domain;
+package arc.expenses.n4160.domain;
 
-import gr.athenarc.domain.*;
+
+import arc.athenarc.n4160.domain.*;
 
 public class RequestFatClass {
 

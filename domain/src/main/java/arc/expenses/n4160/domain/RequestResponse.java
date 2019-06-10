@@ -1,8 +1,7 @@
-package arc.expenses.domain;
+package arc.expenses.n4160.domain;
 
-import gr.athenarc.domain.BaseInfo;
-import gr.athenarc.domain.Request;
-import gr.athenarc.domain.Stage;
+import arc.athenarc.n4160.domain.*;
+import arc.athenarc.n4160.domain.Request;
 
 import java.util.Map;
 
@@ -12,7 +11,7 @@ public class RequestResponse {
     private Request.RequesterPosition requesterPosition;
     private Request.Type type;
     private Request.RequestStatus requestStatus;
-    private Map<String, Stage>  stages;
+    private Map<String, Stage> stages;
 
     private String projectAcronym;
     private String instituteName;

@@ -13,28 +13,28 @@
       "type": "string"
     },
     "director": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "accountingRegistration": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "accountingPayment": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "accountingDirector": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "diaugeia": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "suppliesOffice": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "travelManager": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "diataktis": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     }
   },
   "required": [

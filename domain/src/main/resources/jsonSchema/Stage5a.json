@@ -9,7 +9,7 @@
   },
   "extends": {
     "type": "object",
-    "javaType": "gr.athenarc.domain.Stage"
+    "javaType": "arc.athenarc.n4160.domain.Stage"
   }
 
 }

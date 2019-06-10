@@ -5,7 +5,7 @@
   "type": "object",
   "extends": {
     "type" : "object",
-    "javaType" : "gr.athenarc.domain.BaseInfo"
+    "javaType" : "arc.athenarc.n4160.domain.BaseInfo"
   },
   "properties": {
     "currentStage" : {
@@ -13,35 +13,35 @@
     },
     "stage7": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage7"
+      "javaType": "arc.athenarc.n4160.domain.Stage7"
     },
     "stage7a": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage7a"
+      "javaType": "arc.athenarc.n4160.domain.Stage7a"
     },
     "stage8": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage8"
+      "javaType": "arc.athenarc.n4160.domain.Stage8"
     },
     "stage9": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage9"
+      "javaType": "arc.athenarc.n4160.domain.Stage9"
     },
     "stage10": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage10"
+      "javaType": "arc.athenarc.n4160.domain.Stage10"
     },
     "stage11": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage11"
+      "javaType": "arc.athenarc.n4160.domain.Stage11"
     },
     "stage12": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage12"
+      "javaType": "arc.athenarc.n4160.domain.Stage12"
     },
     "stage13": {
       "type": "object",
-      "javaType": "gr.athenarc.domain.Stage13"
+      "javaType": "arc.athenarc.n4160.domain.Stage13"
     }
   }
 }

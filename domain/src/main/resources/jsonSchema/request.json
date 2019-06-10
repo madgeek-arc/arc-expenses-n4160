@@ -36,13 +36,13 @@
       "type": "string"
     },
     "user": {
-      "javaType": "gr.athenarc.domain.User"
+      "javaType": "arc.athenarc.n4160.domain.User"
     },
     "onBehalfOf": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "diataktis": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "requesterPosition": {
       "description": "Position of the requester in the Institute.",
@@ -70,10 +70,10 @@
       }
     },
     "trip": {
-      "javaType": "gr.athenarc.domain.Trip"
+      "javaType": "arc.athenarc.n4160.domain.Trip"
     },
     "lastModified": {
-      "javaType": "gr.athenarc.domain.LastModified"
+      "javaType": "arc.athenarc.n4160.domain.LastModified"
     }
   },
   "required": [

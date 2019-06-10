@@ -17,7 +17,7 @@
       "type": "string"
     },
     "lastModified": {
-      "javaType": "gr.athenarc.domain.LastModified"
+      "javaType": "arc.athenarc.n4160.domain.LastModified"
     },
     "status": {
       "type": "string",

@@ -15,7 +15,7 @@
     "delegates": {
       "type": "array",
       "items": {
-        "javaType": "gr.athenarc.domain.Delegate"
+        "javaType": "arc.athenarc.n4160.domain.Delegate"
       }
     }
   },

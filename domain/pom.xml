@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>gr.athenarc</groupId>
+    <groupId>gr.athenarc.n4160</groupId>
     <artifactId>domain</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
 
     <properties>
         <typescript.exec.skip>true</typescript.exec.skip>
@@ -90,7 +90,8 @@
                 <version>0.5.1</version>
                 <configuration>
                     <sourceDirectory>${basedir}/src/main/resources/jsonSchema/</sourceDirectory>
-                    <targetPackage>${project.groupId}.domain</targetPackage>
+<!--                    <targetPackage>${project.groupId}.domain</targetPackage>-->
+                    <targetPackage>arc.athenarc.n4160.domain</targetPackage>
                     <outputDirectory>target/generated-sources/jsonSchema</outputDirectory>
                     <includeConstructors>true</includeConstructors>
                     <includeJsr303Annotations>true</includeJsr303Annotations>
@@ -118,8 +119,8 @@
                             <outputFileType>implementationFile</outputFileType>
                             <mapClasses>asClasses</mapClasses>
                             <classPatterns>
-                                <pattern>gr.athenarc.domain.*</pattern>
-                                <pattern>arc.expenses.domain.*</pattern>
+                                <pattern>gr.athenarc.n4160.domain.*</pattern>
+                                <pattern>arc.expenses.n4160.domain.*</pattern>
                             </classPatterns>
                             <outputFile>target/operation.ts</outputFile>
                             <outputKind>module</outputKind>

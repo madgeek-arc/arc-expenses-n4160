@@ -1,4 +1,4 @@
-package arc.expenses.domain;
+package arc.expenses.n4160.domain;
 
 import java.io.Serializable;
 

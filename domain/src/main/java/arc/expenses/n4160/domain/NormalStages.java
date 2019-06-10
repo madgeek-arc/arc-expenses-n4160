@@ -1,6 +1,6 @@
-package arc.expenses.domain;
+package arc.expenses.n4160.domain;
 
-public enum Stages {
+public enum NormalStages {
     CANCELLED,
     REJECTED,
     Stage1,

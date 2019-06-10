@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Budget",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "distribution": {
+      "type": "string",
+      "enum" : [
+        "REGULAR",
+        "CONTRACT",
+        "SERVICES_CONTRACT",
+        "TRIP"
+      ]
+    },
+    "submittedBy": {
+      "javaType": "arc.athenarc.n4160.domain.User"
+    },
+    "creationDate": {
+      "type":"string",
+      "format":"utc-millisec"
+    },
+    "stage": {
+      "type": "string"
+    },
+    "currentStage": {
+      "type": "string"
+    },
+    "stage2": {
+      "type": "object",
+      "javaType": "arc.athenarc.n4160.domain.Stage2"
+    },
+    "stage4": {
+      "type": "object",
+      "javaType": "arc.athenarc.n4160.domain.Stage4"
+    },
+    "stage5a": {
+      "type": "object",
+      "javaType": "arc.athenarc.n4160.domain.Stage5a"
+    },
+    "stage6": {
+      "type": "object",
+      "javaType": "arc.athenarc.n4160.domain.Stage6"
+    },
+    "boardDecision" : {
+      "type" : "array",
+      "items" :{
+        "javaType" : "arc.athenarc.n4160.domain.Attachment"
+      }
+    },
+    "technicalReport" : {
+      "type" : "array",
+      "items" :{
+        "javaType" : "arc.athenarc.n4160.domain.Attachment"
+      }
+    }
+  }
+}

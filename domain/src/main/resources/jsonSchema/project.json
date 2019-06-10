@@ -19,12 +19,12 @@
       "type": "string"
     },
     "scientificCoordinator": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "operator": {
       "type": "array",
       "items": {
-        "javaType": "gr.athenarc.domain.PersonOfInterest"
+        "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
       }
     },
     "startDate": {
@@ -39,6 +39,12 @@
     },
     "scientificCoordinatorAsDiataktis": {
       "type": "boolean"
+    },
+    "budgets": {
+      "type": "array",
+      "items": {
+        "javaType": "arc.athenarc.n4160.domain.Budget"
+      }
     }
   },
   "required": [

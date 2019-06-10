@@ -6,22 +6,22 @@
     "id": { "type": "string" },
     "name": { "type": "string" },
     "poy": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "director": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "viceDirector": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     },
     "inspectionTeam": {
       "type": "array",
       "items": {
-        "javaType": "gr.athenarc.domain.PersonOfInterest"
+        "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
       }
     },
     "dioikitikoSumvoulio": {
-      "javaType": "gr.athenarc.domain.PersonOfInterest"
+      "javaType": "arc.athenarc.n4160.domain.PersonOfInterest"
     }
   },
   "required": [
