@@ -43,7 +43,7 @@
       "javaType": "arc.athenarc.n4160.domain.User"
     },
     "date": {
-      "type":"string",
+      "type":"number",
       "format":"utc-millisec"
     },
     "stage": {
