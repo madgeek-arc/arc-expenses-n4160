@@ -12,13 +12,25 @@
     "year": {
       "type": "number"
     },
-    "distribution": {
+    "regularAmount": {
+      "type": "number"
+    },
+    "contractAmount": {
+      "type": "number"
+    },
+    "tripAmount": {
+      "type": "number"
+    },
+    "servicesContractAmount": {
+      "type": "number"
+    },
+    "budgetStatus": {
       "type": "string",
       "enum" : [
-        "REGULAR",
-        "CONTRACT",
-        "SERVICES_CONTRACT",
-        "TRIP"
+        "CANCELLED",
+        "PENDING",
+        "ACCEPTED",
+        "REJECTED"
       ]
     },
     "submittedBy": {
