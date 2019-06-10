@@ -3,6 +3,12 @@
   "title": "Budget",
   "type": "object",
   "properties": {
+    "pois": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "id": {
       "type": "string"
     },
@@ -10,7 +16,7 @@
       "type": "string"
     },
     "year": {
-      "type": "number"
+      "type": "integer"
     },
     "regularAmount": {
       "type": "number"
@@ -63,16 +69,12 @@
       "javaType": "arc.athenarc.n4160.domain.Stage6"
     },
     "boardDecision" : {
-      "type" : "array",
-      "items" :{
-        "javaType" : "arc.athenarc.n4160.domain.Attachment"
-      }
+      "type" : "object",
+      "javaType" : "arc.athenarc.n4160.domain.Attachment"
     },
     "technicalReport" : {
-      "type" : "array",
-      "items" :{
-        "javaType" : "arc.athenarc.n4160.domain.Attachment"
-      }
+      "type" : "object",
+      "javaType" : "arc.athenarc.n4160.domain.Attachment"
     }
   }
 }
