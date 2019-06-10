@@ -42,7 +42,7 @@
     "submittedBy": {
       "javaType": "arc.athenarc.n4160.domain.User"
     },
-    "creationDate": {
+    "date": {
       "type":"string",
       "format":"utc-millisec"
     },
