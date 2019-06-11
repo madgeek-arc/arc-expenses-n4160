@@ -1,7 +1,7 @@
 /*
 package unitest;
 
-import arc.expenses.config.ARCServiceConfiguration;
+import ARCServiceConfiguration;
 import RequestServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;

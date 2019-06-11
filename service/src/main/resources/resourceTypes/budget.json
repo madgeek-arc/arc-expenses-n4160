@@ -1,0 +1,34 @@
+{
+  "indexFields": [
+    {
+      "name": "budget_id",
+      "path": "$.id",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "current_stage",
+      "path": "$.currentStage",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "status",
+      "path": "$.budgetStatus",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "year",
+      "path": "$.year",
+      "type": "java.lang.Integer"
+    },
+    {
+      "name": "project",
+      "path": "$.projectId",
+      "type": "java.lang.String"
+    }
+  ],
+  "indexMapperClass": "eu.openminted.registry.core.index.DefaultIndexMapper",
+  "name": "budget",
+  "aliasGroup" : "requestGroup",
+  "payloadType": "json",
+  "schemaUrl":"https://raw.githubusercontent.com/madgeek-arc/arc-expenses-n4160/develop/domain/src/main/resources/jsonSchema/budget.json"
+}
