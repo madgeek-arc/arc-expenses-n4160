@@ -15,8 +15,14 @@
     "projectId": {
       "type": "string"
     },
+    "archiveId": {
+      "type": "string"
+    },
     "year": {
       "type": "integer"
+    },
+    "comment": {
+      "type": "string"
     },
     "regularAmount": {
       "type": "number"
