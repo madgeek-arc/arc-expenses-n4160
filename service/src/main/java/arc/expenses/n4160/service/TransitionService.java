@@ -2,6 +2,7 @@ package arc.expenses.n4160.service;
 
 
 import arc.athenarc.n4160.domain.*;
+import arc.expenses.n4160.domain.BudgetStages;
 import arc.expenses.n4160.domain.NormalStages;
 import arc.expenses.n4160.domain.StageEvents;
 import eu.openminted.registry.core.domain.Browsing;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service("transitionService")
-public class TransitionService{
+public class TransitionService {
 
     private static Logger logger = LogManager.getLogger(TransitionService.class);
 
@@ -65,6 +66,9 @@ public class TransitionService{
     private UserServiceImpl userService;
 
     @Autowired
+    private BudgetServiceImpl budgetService;
+
+    @Autowired
     private RequestPaymentServiceImpl requestPaymentService;
 
     public boolean checkContains(HttpServletRequest request, Class stageClass){
@@ -84,6 +88,30 @@ public class TransitionService{
 
         if(context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class) == null && context.getMessage().getHeaders().get("paymentObj", RequestPayment.class)==null) {
             context.getStateMachine().setStateMachineError(new ServiceException("Both request approval and payment objects are empty"));
+            return false;
+        }
+
+        HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+        if(req == null) {
+            context.getStateMachine().setStateMachineError(new ServiceException("Http request is empty"));
+            return false;
+        }
+        List<String> requiredFields = Arrays.stream(stageClass.getDeclaredFields()).filter(p -> p.isAnnotationPresent(NotNull.class)).flatMap(p -> Stream.of(p.getName())).collect(Collectors.toList());
+        Map<String, String[]> parameters = req.getParameterMap();
+        for(String field: requiredFields){
+            if(!parameters.containsKey(field)) {
+                context.getStateMachine().setStateMachineError(new ServiceException(field + " is required"));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkContainsBudget(StateContext<BudgetStages, StageEvents> context, Class stageClass){
+
+        if(context.getMessage().getHeaders().get("budgetRequest", Budget.class) == null) {
+            context.getStateMachine().setStateMachineError(new ServiceException("Budget request is null"));
             return false;
         }
 
@@ -134,7 +162,7 @@ public class TransitionService{
 
         Request request = requestService.get(requestApproval.getRequestId());
         stage.setComment(comment);
-        stage.setAttachments(exportAttachments(request,(MultipartHttpServletRequest) req, stage));
+        stage.setAttachments(exportAttachments(request.getArchiveId(),(MultipartHttpServletRequest) req, stage));
 
 
         if(stage instanceof Stage1)
@@ -186,7 +214,7 @@ public class TransitionService{
         Request request = requestService.get(requestPayment.getRequestId());
 
         stage.setComment(comment);
-        stage.setAttachments(exportAttachments(request,(MultipartHttpServletRequest) req, stage));
+        stage.setAttachments(exportAttachments(request.getArchiveId(),(MultipartHttpServletRequest) req, stage));
 
         if(stage instanceof Stage7)
             requestPayment.setStage7((Stage7) stage);
@@ -208,7 +236,6 @@ public class TransitionService{
         requestPaymentService.update(requestPayment,requestPayment.getId());
 
     }
-
     public void cancelRequestApproval(
             StateContext<NormalStages, StageEvents> context,
             String stage) throws Exception {
@@ -266,6 +293,142 @@ public class TransitionService{
 
     }
 
+    public void editBudget(StateContext<BudgetStages, StageEvents> context, Stage stage, String stageString) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, ResourceNotFoundException, InstantiationException, IOException {
+        stage.setDate(new Date().toInstant().toEpochMilli());
+        Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+        HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+
+        Map<String, Class> keyValuePair = new HashMap<>();
+        Arrays.stream(stage.getClass().getDeclaredFields()).forEach(p -> {
+            keyValuePair.put(p.getName(),p.getType());
+        });
+        Map<String, String[]> parameters = req.getParameterMap();
+        for(Map.Entry<String, Class> entry: keyValuePair.entrySet()){
+            String field = entry.getKey();
+            if(parameters.containsKey(field)) {
+                String upperCaseField = field.substring(0, 1).toUpperCase() + field.substring(1);
+                if(entry.getValue().isEnum())
+                    stage.getClass().getMethod("set"+upperCaseField, entry.getValue()).invoke(stage, entry.getValue().getMethod("fromValue",String.class).invoke(entry.getValue(),req.getParameter(field)));
+                else
+                    stage.getClass().getMethod("set"+upperCaseField, entry.getValue()).invoke(stage, entry.getValue().getConstructor(String.class).newInstance(req.getParameter(field)));
+            }
+        }
+
+        String comment = Optional.ofNullable(req.getParameter("comment")).orElse(stage.getComment());
+        stage.setComment(comment);
+        stage.setAttachments(exportAttachments(budget.getArchiveId(),(MultipartHttpServletRequest) req, stage));
+
+
+        if(stage instanceof Stage2)
+            budget.setStage2((Stage2) stage);
+        else if(stage instanceof Stage4)
+            budget.setStage4((Stage4) stage);
+        else if(stage instanceof Stage5a)
+            budget.setStage5a((Stage5a) stage);
+        else if(stage instanceof Stage6)
+            budget.setStage6((Stage6) stage);
+
+        budgetService.update(budget,budget.getId());
+    }
+
+    public void cancelBudget(
+            StateContext<BudgetStages, StageEvents> context,
+            String stage) throws Exception {
+        Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+        HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+
+        budget.setBudgetStatus(Budget.BudgetStatus.CANCELLED);
+        budget.setStage(stage+"");
+        aclService.removeEdit(budget.getId(),Budget.class);
+        aclService.removeWrite(budget.getId(),Budget.class);
+        budgetService.update(budget,budget.getId());
+        mailService.sendMail("CANCEL", budget.getId(), budget.getDate()+"");
+
+    }
+
+    public void downgradeBudget(StateContext<BudgetStages, StageEvents> context, String fromStage, String toStage, Stage stage){
+        Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+        stage.setDate(new Date().toInstant().toEpochMilli());
+        MultipartHttpServletRequest req = (MultipartHttpServletRequest) context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+        String comment = Optional.ofNullable(req.getParameter("comment")).orElse("");
+        if(comment.isEmpty()) {
+            context.getStateMachine().setStateMachineError(new ServiceException("We need a comment!"));
+            throw new ServiceException("We need a comment!");
+        }
+        try {
+            modifyRequestBudget(context, stage,toStage, Budget.BudgetStatus.UNDER_REVIEW);
+            Project project = projectService.get(budget.getProjectId());
+            updatingPermissions(fromStage,toStage,project,"DOWNGRADE", Budget.class,budget.getId(), stage.getDate()+"");
+        } catch (Exception e) {
+            logger.error("Error occurred on downgrade of budget " + budget.getId(),e);
+            context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
+            throw new ServiceException(e.getMessage());
+        }
+    }
+
+    public void rejectBudget(StateContext<BudgetStages, StageEvents> context, Stage stage, String rejectedAt) throws Exception {
+        stage.setDate(new Date().toInstant().toEpochMilli());
+        modifyRequestBudget(context, stage,rejectedAt, Budget.BudgetStatus.PENDING);
+    }
+
+    public void approveBudget(StateContext<BudgetStages, StageEvents> context, String fromStage, String toStage, Stage stage) throws Exception {
+        Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+        stage.setDate(new Date().toInstant().toEpochMilli());
+        modifyRequestBudget(context, stage, toStage, (fromStage.equals("6") && toStage.equals("6") ? Budget.BudgetStatus.ACCEPTED : Budget.BudgetStatus.PENDING));
+        Project project = projectService.get(budget.getProjectId());
+        updatingPermissions(fromStage,toStage, project, "APPROVE", Budget.class,budget.getId(), stage.getDate()+"");
+
+    }
+
+    public void modifyRequestBudget(
+            StateContext<BudgetStages, StageEvents> context,
+            Stage stage,
+            String stageString,
+            Budget.BudgetStatus status) throws Exception {
+
+        HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+        stage.setDate(new Date().toInstant().toEpochMilli());
+        Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+
+        String comment = Optional.ofNullable(req.getParameter("comment")).orElse("");
+
+
+        stage.setAttachments(exportAttachments(budget.getArchiveId(),(MultipartHttpServletRequest) req, stage));
+        stage.setComment(comment);
+        try {
+            User user = userService.getByField("user_email",(String) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            stage.setUser(user);
+        } catch (Exception e) {
+            context.getStateMachine().setStateMachineError(new ServiceException("User not found"));
+            throw new ServiceException("User not found");
+        }
+
+        if(stage instanceof Stage2)
+            budget.setStage2((Stage2) stage);
+        else if(stage instanceof Stage4)
+            budget.setStage4((Stage4) stage);
+        else if(stage instanceof Stage5a)
+            budget.setStage5a((Stage5a) stage);
+        else if(stage instanceof Stage6)
+            budget.setStage6((Stage6) stage);
+
+        budget.setStage(stageString);
+        budget.setBudgetStatus(status);
+        if(status== Budget.BudgetStatus.ACCEPTED) {
+            Project project = projectService.get(budget.getProjectId());
+            updatingPermissions("6","6",project, "APPROVE", Budget.class,budget.getId(), stage.getDate()+"");
+            aclService.removeEdit(budget.getId(),Budget.class);
+            budget.setCurrentStage(BudgetStages.FINISHED.name());
+        }
+        budgetService.update(budget,budget.getId());
+
+        if(status == Budget.BudgetStatus.REJECTED){
+            mailService.sendMail("REJECT", budget.getId(), budget.getDate()+"");
+        }
+    }
+
+
+
     public void modifyRequestApproval(
             StateContext<NormalStages, StageEvents> context,
             Stage stage,
@@ -280,7 +443,7 @@ public class TransitionService{
         String comment = Optional.ofNullable(req.getParameter("comment")).orElse("");
 
 
-        stage.setAttachments(exportAttachments(request,(MultipartHttpServletRequest) req, stage));
+        stage.setAttachments(exportAttachments(request.getArchiveId(),(MultipartHttpServletRequest) req, stage));
         stage.setComment(comment);
         try {
             User user = userService.getByField("user_email",(String) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
@@ -314,7 +477,8 @@ public class TransitionService{
             }else{
                 requestPaymentService.createPayment(request);
             }
-            updatingPermissions("6","7",request, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
+            Project project = projectService.get(request.getProjectId());
+            updatingPermissions("6","7",project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
             aclService.removeEdit(requestApproval.getId(),RequestApproval.class);
             requestService.update(request,request.getId());
         }
@@ -326,6 +490,7 @@ public class TransitionService{
             mailService.sendMail("REJECT", request.getId(), projectService.get(request.getProjectId()).getAcronym(), requestApproval.getStage1().getRequestDate(), requestApproval.getStage1().getFinalAmount()+"", requestApproval.getStage1().getSubject(),false, requestApproval.getId(), request.getPois());
         }
     }
+
 
     public void modifyRequestPayment(
             StateContext<NormalStages, StageEvents> context,
@@ -339,7 +504,7 @@ public class TransitionService{
         Request request = requestService.get(requestPayment.getRequestId());
         String comment = Optional.ofNullable(req.getParameter("comment")).orElse("");
 
-        stage.setAttachments(exportAttachments(request,(MultipartHttpServletRequest) req, stage));
+        stage.setAttachments(exportAttachments(request.getArchiveId(),(MultipartHttpServletRequest) req, stage));
         stage.setComment(comment);
         try {
             User user = userService.getByField("user_email",(String) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
@@ -409,7 +574,8 @@ public class TransitionService{
 
             requestService.update(request,request.getId());
         }
-        updatingPermissions(fromStage,toStage,request, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
+        Project project = projectService.get(request.getProjectId());
+        updatingPermissions(fromStage,toStage, project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
 
     }
 
@@ -430,9 +596,9 @@ public class TransitionService{
         }
 
         modifyRequestPayment(context, stage, toStage, status);
-
-        updatingPermissions(fromStage,toStage, request, "APPROVE",RequestPayment.class,requestPayment.getId(),stage.getDate()+"");
-        updatingPermissions(fromStage,toStage,request,"",RequestApproval.class,requestApprovalService.getApproval(request.getId()).getId(), stage.getDate()+"");
+        Project project = projectService.get(request.getProjectId());
+        updatingPermissions(fromStage,toStage, project, "APPROVE",RequestPayment.class,requestPayment.getId(),stage.getDate()+"");
+        updatingPermissions(fromStage,toStage,project,"",RequestApproval.class,requestApprovalService.getApproval(request.getId()).getId(), stage.getDate()+"");
 
     }
 
@@ -459,7 +625,8 @@ public class TransitionService{
         try {
             Request request = requestService.get(requestApproval.getRequestId());
             modifyRequestApproval(context, stage,toStage, BaseInfo.Status.UNDER_REVIEW);
-            updatingPermissions(fromStage,toStage,request,"Downgrade",RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
+            Project project = projectService.get(request.getProjectId());
+            updatingPermissions(fromStage,toStage,project,"Downgrade",RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
         } catch (Exception e) {
             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
@@ -478,7 +645,8 @@ public class TransitionService{
         }
         try {
             modifyRequestPayment(context, stage,toStage, BaseInfo.Status.UNDER_REVIEW);
-            updatingPermissions(fromStage,toStage,requestService.get(requestPayment.getRequestId()),"Downgrade", RequestPayment.class,requestPayment.getId(), stage.getDate()+"");
+            Project project = projectService.get(requestService.get(requestPayment.getRequestId()).getProjectId());
+            updatingPermissions(fromStage,toStage,project,"Downgrade", RequestPayment.class,requestPayment.getId(), stage.getDate()+"");
         } catch (Exception e) {
             logger.error("Error occurred on approval of payment " + requestPayment.getId(),e);
             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
@@ -486,17 +654,42 @@ public class TransitionService{
         }
     }
 
-    public void updatingPermissions(String from, String to, Request request, String mailType, Class persistentClass, String id, String dateToSend) throws Exception {
+    public void updatingPermissions(String from, String to, Project project, String mailType, Class persistentClass, String id, String dateToSend) throws Exception {
         List<Sid> revokeEditAccess = new ArrayList<>();
         List<Sid> grantAccess = new ArrayList<>();
         List<Sid> grantWrite = new ArrayList<>();
-        Project project = projectService.get(request.getProjectId());
         Institute institute = instituteService.get(project.getInstituteId());
         Organization organization = organizationService.get(institute.getOrganizationId());
+        String requester = "";
+        String requestId = "";
+        Request.Type requestType = null;
+        PersonOfInterest diataktis = null;
+        PersonOfInterest onBehalf = null;
+        Request request = null;
+        Budget budget = null;
+        if(persistentClass.equals(RequestApproval.class)){
+            request = requestService.get(requestApprovalService.get(id).getRequestId());
+            requester = request.getUser().getEmail();
+            diataktis = request.getDiataktis();
+            requestType = request.getType();
+            requestId = request.getId();
+            onBehalf = request.getOnBehalfOf();
+        }else if(persistentClass.equals(RequestPayment.class)) {
+            request = requestService.get(requestPaymentService.get(id).getRequestId());
+            requester = request.getUser().getEmail();
+            diataktis = request.getDiataktis();
+            requestType = request.getType();
+            requestId = request.getId();
+            onBehalf = request.getOnBehalfOf();
+        }else if(persistentClass.equals(Budget.class)){
+            budget = budgetService.get(id);
+            requester = budget.getSubmittedBy().getEmail();
+            diataktis = institute.getDiataktis();
+        }
 
         switch (from){
             case "1":
-                revokeEditAccess.add(new PrincipalSid(request.getUser().getEmail()));
+                revokeEditAccess.add(new PrincipalSid(requester));
                 break;
             case "2":
                 revokeEditAccess.add(new PrincipalSid(project.getScientificCoordinator().getEmail()));
@@ -519,8 +712,8 @@ public class TransitionService{
                 break;
             case "10":
             case "5a":
-                revokeEditAccess.add(new PrincipalSid(request.getDiataktis().getEmail()));
-                request.getDiataktis().getDelegates().forEach( delegate -> {
+                revokeEditAccess.add(new PrincipalSid(diataktis.getEmail()));
+                diataktis.getDelegates().forEach( delegate -> {
                     revokeEditAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
                 break;
@@ -534,9 +727,9 @@ public class TransitionService{
                 institute.getDiaugeia().getDelegates().forEach(delegate -> revokeEditAccess.add(new PrincipalSid(delegate.getEmail())));
                 break;
             case "7":
-                revokeEditAccess.add(new PrincipalSid(request.getUser().getEmail()));
+                revokeEditAccess.add(new PrincipalSid(requester));
 
-                if(request.getType() == Request.Type.TRIP) {
+                if(requestType == Request.Type.TRIP) {
                     revokeEditAccess.add(new PrincipalSid(institute.getTravelManager().getEmail()));
                     institute.getTravelManager().getDelegates().forEach(delegate -> {
                         revokeEditAccess.add(new PrincipalSid(delegate.getEmail()));
@@ -579,13 +772,13 @@ public class TransitionService{
 
         switch (to){
             case "1":
-                grantAccess.add(new PrincipalSid(request.getUser().getEmail()));
+                grantAccess.add(new PrincipalSid(requester));
                 break;
             case "2":
                 grantAccess.add(new PrincipalSid(project.getScientificCoordinator().getEmail()));
                 project.getScientificCoordinator().getDelegates().forEach(person -> grantAccess.add(new PrincipalSid(person.getEmail())));
 
-                grantWrite.add(new PrincipalSid(request.getUser().getEmail()));
+                grantWrite.add(new PrincipalSid(requester));
                 break;
             case "3":
                 project.getOperator().forEach(entry -> {
@@ -615,9 +808,10 @@ public class TransitionService{
 
             case "10":
             case "5a":
-                grantAccess.add(new PrincipalSid(request.getDiataktis().getEmail()));
-                request.getDiataktis().getDelegates().forEach( delegate -> {
-                    if(!request.getUser().getEmail().equalsIgnoreCase(delegate.getEmail()))
+                grantAccess.add(new PrincipalSid(diataktis.getEmail()));
+                String finalRequester = requester;
+                diataktis.getDelegates().forEach(delegate -> {
+                    if(!finalRequester.equalsIgnoreCase(delegate.getEmail()))
                         grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
 
@@ -632,9 +826,10 @@ public class TransitionService{
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
 
-                grantWrite.add(new PrincipalSid(request.getDiataktis().getEmail()));
-                request.getDiataktis().getDelegates().forEach( delegate -> {
-                    if(!request.getUser().getEmail().equalsIgnoreCase(delegate.getEmail()))
+                grantWrite.add(new PrincipalSid(diataktis.getEmail()));
+                String finalRequester1 = requester;
+                diataktis.getDelegates().forEach(delegate -> {
+                    if(!finalRequester1.equalsIgnoreCase(delegate.getEmail()))
                         grantWrite.add(new PrincipalSid(delegate.getEmail()));
                 });
                 break;
@@ -643,11 +838,12 @@ public class TransitionService{
                 institute.getDiaugeia().getDelegates().forEach(delegate -> {
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
-                RequestApproval requestApproval = requestApprovalService.getApproval(request.getId());
+                RequestApproval requestApproval = requestApprovalService.getApproval(requestId);
                 if(requestApproval.getStage5b()==null){
-                    grantWrite.add(new PrincipalSid(request.getDiataktis().getEmail()));
-                    request.getDiataktis().getDelegates().forEach( delegate -> {
-                        if(!request.getUser().getEmail().equalsIgnoreCase(delegate.getEmail()))
+                    grantWrite.add(new PrincipalSid(diataktis.getEmail()));
+                    String finalRequester2 = requester;
+                    diataktis.getDelegates().forEach(delegate -> {
+                        if(!finalRequester2.equalsIgnoreCase(delegate.getEmail()))
                             grantWrite.add(new PrincipalSid(delegate.getEmail()));
                     });
                 }else {
@@ -658,8 +854,8 @@ public class TransitionService{
                 }
                 break;
             case "7":
-                grantAccess.add(new PrincipalSid(request.getUser().getEmail()));
-                if(request.getType() == Request.Type.TRIP) {
+                grantAccess.add(new PrincipalSid(requester));
+                if(requestType == Request.Type.TRIP) {
                     grantAccess.add(new PrincipalSid(institute.getTravelManager().getEmail()));
                     institute.getTravelManager().getDelegates().forEach(delegate -> {
                         grantAccess.add(new PrincipalSid(delegate.getEmail()));
@@ -680,9 +876,9 @@ public class TransitionService{
                 grantAccess.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
                 organization.getDioikitikoSumvoulio().getDelegates().forEach(p -> grantAccess.add(new PrincipalSid(p.getEmail())));
 
-                grantWrite.add(new PrincipalSid(request.getUser().getEmail()));
+                grantWrite.add(new PrincipalSid(requester));
 
-                if(request.getType() == Request.Type.TRIP) {
+                if(requestType == Request.Type.TRIP) {
                     grantWrite.add(new PrincipalSid(institute.getTravelManager().getEmail()));
                     institute.getTravelManager().getDelegates().forEach(delegate -> {
                         grantWrite.add(new PrincipalSid(delegate.getEmail()));
@@ -696,12 +892,14 @@ public class TransitionService{
 
                 break;
             case "8":
+                String finalRequester3 = requester;
+                PersonOfInterest finalOnBehalf = onBehalf;
                 organization.getInspectionTeam().forEach(inspector -> {
-                    if(!request.getUser().getEmail().equalsIgnoreCase(inspector.getEmail()) && (request.getOnBehalfOf()==null || !request.getOnBehalfOf().getEmail().equalsIgnoreCase(inspector.getEmail())))
+                    if(!finalRequester3.equalsIgnoreCase(inspector.getEmail()) && (finalOnBehalf ==null || !finalOnBehalf.getEmail().equalsIgnoreCase(inspector.getEmail())))
                         grantAccess.add(new PrincipalSid(inspector.getEmail()));
 
                     inspector.getDelegates().forEach(delegate -> {
-                        if(!request.getUser().getEmail().equalsIgnoreCase(delegate.getEmail()) && (request.getOnBehalfOf()==null || !request.getOnBehalfOf().getEmail().equalsIgnoreCase(delegate.getEmail())))
+                        if(!finalRequester3.equalsIgnoreCase(delegate.getEmail()) && (finalOnBehalf==null || finalOnBehalf.getEmail().equalsIgnoreCase(delegate.getEmail())))
                             grantAccess.add(new PrincipalSid(delegate.getEmail()));
                     });
                 });
@@ -710,7 +908,7 @@ public class TransitionService{
                     grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
                     organization.getDioikitikoSumvoulio().getDelegates().forEach(p -> grantWrite.add(new PrincipalSid(p.getEmail())));
                 }else{
-                    if(request.getType() == Request.Type.TRIP) {
+                    if(requestType == Request.Type.TRIP) {
                         grantWrite.add(new PrincipalSid(institute.getTravelManager().getEmail()));
                         institute.getTravelManager().getDelegates().forEach(delegate -> {
                             grantWrite.add(new PrincipalSid(delegate.getEmail()));
@@ -730,11 +928,13 @@ public class TransitionService{
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
 
+                String finalRequester4 = requester;
+                PersonOfInterest finalOnBehalf1 = onBehalf;
                 organization.getInspectionTeam().forEach(entry -> {
-                    if(!request.getUser().getEmail().equalsIgnoreCase(entry.getEmail()) && (request.getOnBehalfOf()==null || !request.getOnBehalfOf().getEmail().equalsIgnoreCase(entry.getEmail())))
+                    if(!finalRequester4.equalsIgnoreCase(entry.getEmail()) && (finalOnBehalf1 ==null || !finalOnBehalf1.getEmail().equalsIgnoreCase(entry.getEmail())))
                         grantWrite.add(new PrincipalSid(entry.getEmail()));
                     entry.getDelegates().forEach(person -> {
-                        if(!request.getUser().getEmail().equalsIgnoreCase(person.getEmail()) && (request.getOnBehalfOf()==null || !request.getOnBehalfOf().getEmail().equalsIgnoreCase(person.getEmail())))
+                        if(!finalRequester4.equalsIgnoreCase(person.getEmail()) && (finalOnBehalf1==null || !finalOnBehalf1.getEmail().equalsIgnoreCase(person.getEmail())))
                             grantWrite.add(new PrincipalSid(person.getEmail()));
                     });
                 });
@@ -745,9 +945,11 @@ public class TransitionService{
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
 
-                grantWrite.add(new PrincipalSid(request.getDiataktis().getEmail()));
-                request.getDiataktis().getDelegates().forEach( delegate -> {
-                    if(!request.getUser().getEmail().equalsIgnoreCase(delegate.getEmail())&& (request.getOnBehalfOf()==null || !request.getOnBehalfOf().getEmail().equalsIgnoreCase(delegate.getEmail())))
+                grantWrite.add(new PrincipalSid(diataktis.getEmail()));
+                String finalRequester5 = requester;
+                PersonOfInterest finalOnBehalf2 = onBehalf;
+                diataktis.getDelegates().forEach(delegate -> {
+                    if(!finalRequester5.equalsIgnoreCase(delegate.getEmail())&& (finalOnBehalf2 ==null || !finalOnBehalf2.getEmail().equalsIgnoreCase(delegate.getEmail())))
                         grantWrite.add(new PrincipalSid(delegate.getEmail()));
                 });
 
@@ -786,24 +988,38 @@ public class TransitionService{
         aclService.addWrite(grantWrite,id,persistentClass);
 
         if(!mailType.isEmpty()) {
-            boolean isPayment=false;
-            if(persistentClass == RequestPayment.class)
-                isPayment=true;
-            mailService.sendMail(mailType, request.getId(), project.getAcronym(), dateToSend, request.getFinalAmount()+"", requestApprovalService.getApproval(request.getId()).getStage1().getSubject(),isPayment,id, grantAccess.stream().map(entry -> ((PrincipalSid) entry).getPrincipal()).collect(Collectors.toList()));
-        }
-        List<String> pois = request.getPois();
+            if (persistentClass == RequestPayment.class || persistentClass == RequestApproval.class) {
+                boolean isPayment = false;
+                if (persistentClass == RequestPayment.class)
+                    isPayment = true;
+                mailService.sendMail(mailType, request.getId(), project.getAcronym(), dateToSend, request.getFinalAmount() + "", requestApprovalService.getApproval(request.getId()).getStage1().getSubject(), isPayment, id, grantAccess.stream().map(entry -> ((PrincipalSid) entry).getPrincipal()).collect(Collectors.toList()));
+            }else{
 
-        grantAccess.forEach(granted -> {
-            if(!pois.contains(((PrincipalSid) granted).getPrincipal())){
-                pois.add(((PrincipalSid) granted).getPrincipal());
+                mailService.sendMail(mailType, budget.getId(), dateToSend);
             }
-        });
+        }
 
-        request.setPois(pois);
-        try {
+        List<String> pois = new ArrayList<>();
+        if(persistentClass == RequestPayment.class || persistentClass == RequestApproval.class) {
+            pois = request.getPois();
+            List<String> finalPois = pois;
+            grantAccess.forEach(granted -> {
+                if(!finalPois.contains(((PrincipalSid) granted).getPrincipal())){
+                    finalPois.add(((PrincipalSid) granted).getPrincipal());
+                }
+            });
+            request.setPois(finalPois);
             requestService.update(request,request.getId());
-        } catch (ResourceNotFoundException e) {
-            logger.error("Failed to update request with POIs",e);
+        }else if(persistentClass == Budget.class) {
+            pois = budget.getPois();
+            List<String> finalPois = pois;
+            grantAccess.forEach(granted -> {
+                if(!finalPois.contains(((PrincipalSid) granted).getPrincipal())){
+                    finalPois.add(((PrincipalSid) granted).getPrincipal());
+                }
+            });
+            budget.setPois(pois);
+            budgetService.update(budget,budget.getId());
         }
 
     }
@@ -825,7 +1041,7 @@ public class TransitionService{
 
     }
 
-    private List<Attachment> exportAttachments(Request request,MultipartHttpServletRequest multiPartRequest, Stage stage) throws IOException {
+    private List<Attachment> exportAttachments(String archiveId,MultipartHttpServletRequest multiPartRequest, Stage stage) throws IOException {
         List<Attachment> attachments = Optional.ofNullable(stage.getAttachments()).orElse(new ArrayList<>());
         List<String> removed = Arrays.asList(Optional.ofNullable(multiPartRequest.getParameterValues("removed")).orElse(new String[]{}));
         if(removed.size()>0){
@@ -843,8 +1059,8 @@ public class TransitionService{
         }
         for(MultipartFile file : multiPartRequest.getFiles("attachments")){
             String checksum = checksum(file.getOriginalFilename());
-            storeRESTClient.storeFile(file.getBytes(), request.getArchiveId()+"/", checksum);
-            attachments.add(new Attachment(file.getOriginalFilename(), FileUtils.extension(file.getOriginalFilename()),new Long(file.getSize()+""), request.getArchiveId()+"/"+checksum));
+            storeRESTClient.storeFile(file.getBytes(), archiveId+"/", checksum);
+            attachments.add(new Attachment(file.getOriginalFilename(), FileUtils.extension(file.getOriginalFilename()),new Long(file.getSize()+""), archiveId+"/"+checksum));
         }
         return attachments;
     }

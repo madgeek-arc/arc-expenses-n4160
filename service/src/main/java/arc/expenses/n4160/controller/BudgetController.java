@@ -1,10 +1,7 @@
 package arc.expenses.n4160.controller;
 
 import arc.athenarc.n4160.domain.*;
-import arc.expenses.n4160.domain.OrderByField;
-import arc.expenses.n4160.domain.OrderByType;
-import arc.expenses.n4160.domain.RequestResponse;
-import arc.expenses.n4160.domain.RequestSummary;
+import arc.expenses.n4160.domain.*;
 import arc.expenses.n4160.service.BudgetServiceImpl;
 import arc.expenses.n4160.service.RequestApprovalServiceImpl;
 import arc.expenses.n4160.service.RequestPaymentServiceImpl;
@@ -55,9 +52,14 @@ public class BudgetController {
     @RequestMapping(value = "/approve/{budgetId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity approve(
             @PathVariable("budgetId") String budgetId,
-            HttpServletRequest req) throws Exception {
+            HttpServletRequest req
+    ){
 
+        Budget budget = budgetService.get(budgetId);
+        if(budget == null)
+            throw new ServiceException("Budget not found");
 
+        budgetService.approve(budget,req);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -67,8 +69,13 @@ public class BudgetController {
     public ResponseEntity reject(
             @PathVariable("budgetId") String budgetId,
             HttpServletRequest req
-    ) throws Exception {
+    ){
 
+        Budget budget = budgetService.get(budgetId);
+        if(budget == null)
+            throw new ServiceException("Budget not found");
+
+        budgetService.reject(budget,req);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -78,7 +85,14 @@ public class BudgetController {
     public ResponseEntity downgrade(
             @PathVariable("budgetId") String budgetId,
             HttpServletRequest req
-    ) throws Exception {
+    ){
+
+        Budget budget = budgetService.get(budgetId);
+        if(budget == null)
+            throw new ServiceException("Budget not found");
+
+        budgetService.downgrade(budget,req);
+
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -88,7 +102,13 @@ public class BudgetController {
     public ResponseEntity edit(
             @PathVariable("budgetId") String budgetId,
             HttpServletRequest req
-    ) throws Exception {
+    ){
+
+        Budget budget = budgetService.get(budgetId);
+        if(budget == null)
+            throw new ServiceException("Budget not found");
+
+        budgetService.downgrade(budget,req);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -98,6 +118,11 @@ public class BudgetController {
     public ResponseEntity cancel(
             @PathVariable("budgetId") String budgetId) throws Exception {
 
+        Budget budget = budgetService.get(budgetId);
+        if(budget == null)
+            throw new ServiceException("Budget not found");
+
+        budgetService.cancel(budget);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -111,11 +136,13 @@ public class BudgetController {
             @ApiImplicitParam(name = "tripAmount", value = "Amount to be spend on trips", required = true, dataType = "number", paramType = "form"),
             @ApiImplicitParam(name = "servicesContractAmount", value = "Amount to be spent on services contracts", required = true, dataType = "number", paramType = "form"),
             @ApiImplicitParam(name = "boardDecision", value = "The board decision", dataType = "file", paramType = "form"),
-            @ApiImplicitParam(name = "technicalReport", value = "The technical report", dataType = "file", paramType = "form")
+            @ApiImplicitParam(name = "technicalReport", value = "The technical report", dataType = "file", paramType = "form"),
+            @ApiImplicitParam(name = "comment", value = "Any comment regarding the budget request", dataType = "string", paramType = "form")
     })
     @RequestMapping(value = "/add", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public Budget addBudget(
             @RequestParam(value = "projectId") String projectId,
+            @RequestParam(value = "comment", required = false,defaultValue = "") String comment,
             @RequestParam(value = "year") int year,
             @RequestParam(value = "regularAmount", required = false, defaultValue = "0.0") Double regularAmount,
             @RequestParam(value = "contractAmount", required = false, defaultValue = "0.0") Double contractAmount,
@@ -124,36 +151,71 @@ public class BudgetController {
             @RequestParam(value = "boardDecision") Optional<MultipartFile> boardDecision,
             @RequestParam(value = "technicalReport") Optional<MultipartFile> technicalReport
     ) throws Exception {
-        return budgetService.add(projectId, year, regularAmount, contractAmount, tripAmount, servicesContractAmount, boardDecision, technicalReport);
+        return budgetService.add(projectId, year, regularAmount, contractAmount, tripAmount, servicesContractAmount, boardDecision, technicalReport, comment);
     }
 
-//    @RequestMapping(value =  "/getById/{id}", method = RequestMethod.GET)
-//    public Request getById(@PathVariable("id") String id) throws ResourceNotFoundException {
-//        return null;
-//    }
+    @RequestMapping(value =  "/getAll", method = RequestMethod.GET)
+    public Paging<BudgetSummary> getAllRequests(@RequestParam(value = "from",required=false,defaultValue = "0") int from,
+                                                 @RequestParam(value = "quantity",required=false,defaultValue = "10") int quantity,
+                                                 @RequestParam(value = "status") List<Budget.BudgetStatus> status,
+                                                 @RequestParam(value = "searchField",required=false, defaultValue = "") String searchField,
+                                                 @RequestParam(value = "stage") List<String> stage,
+                                                 @RequestParam(value = "order",required=false,defaultValue = "ASC") OrderByType orderType,
+                                                 @RequestParam(value = "orderField") OrderByField orderField,
+                                                 @RequestParam(value = "editable", required = false, defaultValue = "false") boolean canEdit,
+                                                 @RequestParam(value = "isMine", required = false, defaultValue = "false") boolean isMine,
+                                                 @RequestParam(value = "projectAcronym", required = false, defaultValue = "") String projectAcronym,
+                                                 @RequestParam(value = "institute", required = false, defaultValue = "") String institute,
+                                                 @RequestParam(value = "requester", required = false, defaultValue = "") String requester) {
 
-//    @RequestMapping(value =  "/getAll", method = RequestMethod.GET)
-//    public Paging<RequestSummary> getAllRequests(@RequestParam(value = "from",required=false,defaultValue = "0") int from,
-//                                                 @RequestParam(value = "quantity",required=false,defaultValue = "10") int quantity,
-//                                                 @RequestParam(value = "status") List<BaseInfo.Status> status,
-//                                                 @RequestParam(value = "type") List<Request.Type> type,
-//                                                 @RequestParam(value = "searchField",required=false, defaultValue = "") String searchField,
-//                                                 @RequestParam(value = "stage") List<String> stage,
-//                                                 @RequestParam(value = "order",required=false,defaultValue = "ASC") OrderByType orderType,
-//                                                 @RequestParam(value = "orderField") OrderByField orderField,
-//                                                 @RequestParam(value = "editable", required = false, defaultValue = "false") boolean canEdit,
-//                                                 @RequestParam(value = "isMine", required = false, defaultValue = "false") boolean isMine,
-//                                                 @RequestParam(value = "projectAcronym", required = false, defaultValue = "") String projectAcronym,
-//                                                 @RequestParam(value = "institute", required = false, defaultValue = "") String institute,
-//                                                 @RequestParam(value = "requester", required = false, defaultValue = "") String requester) {
-//
-//        return requestService.criteriaSearch(from,quantity,status,type,searchField,stage,orderType,orderField, canEdit, isMine, projectAcronym, institute, requester);
-//
-//    }
+        return budgetService.criteriaSearch(from,quantity,status,searchField,stage,orderType,orderField, canEdit, isMine, projectAcronym, institute, requester);
 
-    /*////////////////////////////////////////////////////////////////////////////////////////
-                                        OLD STUFF
-      ////////////////////////////////////////////////////////////////////////////////////////
-     */
+    }
+
+
+    @RequestMapping(value =  "/getById/{id}", method = RequestMethod.GET)
+    public BudgetResponse getById(@PathVariable("id") String id) throws Exception {
+        Budget budget = budgetService.get(id);
+        if(budget == null)
+            throw new ResourceNotFoundException();
+        return budgetService.getBudgetResponse(budget);
+    }
+
+    @RequestMapping(value = "/store/uploadFile", method = RequestMethod.POST,produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> uploadFile(@RequestParam("archiveID") String archiveID,
+                                             @RequestParam("stage") String stage,
+                                             @RequestParam("file") MultipartFile file) throws IOException {
+        return budgetService.upLoadFile(archiveID,stage,file);
+    }
+
+    @RequestMapping(value = "/store", method = RequestMethod.GET)
+    @ResponseBody
+    public void downloadFile(@RequestParam("archiveId") String archiveId,
+                             @RequestParam("id") String objectId,
+                             HttpServletResponse response) throws Exception {
+        Budget budget = budgetService.get(objectId);
+
+        if(budget == null)
+            throw new ServiceException("Budget not found");
+
+        Attachment attachment = budgetService.getAttachmentsFromBudget(budget,archiveId);
+        if(attachment == null)
+            throw new ServiceException("Attachment not found");
+        File temp = File.createTempFile(attachment.getFilename(), "tmp");
+        temp = budgetService.downloadFile(temp,budget,archiveId);
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''"+ UriUtils.encode(attachment.getFilename(),"UTF-8") +"");
+        IOUtils.copyLarge(new FileInputStream(temp), response.getOutputStream());
+    }
+
+    @RequestMapping(value = "/store", method = RequestMethod.DELETE)
+    @ResponseBody
+    public void deleteFile(@RequestParam("archiveId") String archiveId,
+                           @RequestParam("id") String objectId) {
+
+        Budget budget = budgetService.get(objectId);
+        if (budget== null)
+            throw new ServiceException("Budget not found");
+        budgetService.deleteFile(budget, archiveId);
+    }
 
 }

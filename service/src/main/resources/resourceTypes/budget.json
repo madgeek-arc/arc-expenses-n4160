@@ -24,7 +24,18 @@
       "name": "project",
       "path": "$.projectId",
       "type": "java.lang.String"
+    },
+    {
+    "name": "stage",
+    "path": "$.stage",
+    "type": "java.lang.String"
+    },
+    {
+      "name": "requester",
+      "path": "$.submittedBy.email",
+      "type": "java.lang.String"
     }
+
   ],
   "indexMapperClass": "eu.openminted.registry.core.index.DefaultIndexMapper",
   "name": "budget",

@@ -53,4 +53,8 @@ public class MailService {
 //        jmsTemplate.convertAndSend("mailbox", jsonObject.toString());
     }
 
+    public void sendMail(String type, String budgetId, String creationDate){
+        logger.info("Sending mail of type "+type + " to  someone");
+    }
+
 }

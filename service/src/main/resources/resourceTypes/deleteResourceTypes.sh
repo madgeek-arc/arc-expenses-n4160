@@ -4,8 +4,8 @@
 #	curl -X DELETE -k  https://$1/arc-expenses-service/resourceType/$i
 #done
 
-#for i in   budget user organization project request institute approval payment; do
-for i in budget; do
+for i in   budget user organization project request institute approval payment; do
+#for i in budget; do
 	psql -h $1 -Uvrasidas registry <<endOfMessage
 
 delete from stringindexedfield_values where stringindexedfield_id in (select id from stringindexedfield where resource_id in (select id from resource where fk_name='$i'));

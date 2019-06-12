@@ -2,6 +2,8 @@ package arc.expenses.n4160.config;
 
 import arc.expenses.n4160.config.cache.CachingConfiguration;
 import arc.expenses.n4160.config.security.CORSFilter;
+import arc.expenses.n4160.config.stateMachine.BudgetStateMachineConfiguration;
+import arc.expenses.n4160.config.stateMachine.RequestStateMachineConfiguration;
 import eu.openminted.registry.core.configuration.HibernateConfiguration;
 import eu.openminted.registry.core.configuration.JmsConfiguration;
 import org.springframework.web.filter.CharacterEncodingFilter;
@@ -22,7 +24,9 @@ public class ARCServiceDispatcherInitializer extends AbstractAnnotationConfigDis
                 ARCServiceConfiguration.class,
                 HibernateConfiguration.class,
                 JmsConfiguration.class,
-                CachingConfiguration.class
+                CachingConfiguration.class,
+                RequestStateMachineConfiguration.class,
+                BudgetStateMachineConfiguration.class
         };
     }
 
