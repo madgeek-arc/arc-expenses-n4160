@@ -42,7 +42,8 @@
         "CANCELLED",
         "PENDING",
         "ACCEPTED",
-        "REJECTED"
+        "REJECTED",
+        "UNDER_REVIEW"
       ]
     },
     "submittedBy": {
@@ -81,6 +82,9 @@
     "technicalReport" : {
       "type" : "object",
       "javaType" : "arc.athenarc.n4160.domain.Attachment"
+    },
+    "lastModified": {
+      "javaType": "arc.athenarc.n4160.domain.LastModified"
     }
   }
 }
