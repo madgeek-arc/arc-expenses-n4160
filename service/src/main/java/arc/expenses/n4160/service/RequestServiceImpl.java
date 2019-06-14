@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -78,6 +79,9 @@ public class RequestServiceImpl extends GenericService<Request> {
 
     @Autowired
     private TransitionService transitionService;
+
+    @Autowired
+    private BudgetServiceImpl budgetService;
 
     @Autowired
     private RequestPaymentServiceImpl requestPaymentService;
@@ -140,6 +144,23 @@ public class RequestServiceImpl extends GenericService<Request> {
             throw new ServiceException("Organization with id "+ institute.getOrganizationId()+ " not found");
 
         User user = userService.getByField("user_email",(String) authentication.getPrincipal());
+
+
+        FacetFilter facetFilter = new FacetFilter();
+        facetFilter.setQuantity(10000);
+        Map<String,Object> filter = new HashMap<>();
+        filter.put("project",projectId);
+        filter.put("status","ACCEPTED");
+        filter.put("year",LocalDate.now().getYear());
+
+        facetFilter.setFilter(filter);
+
+
+        List<Budget> budgets = budgetService.getAll(facetFilter,null).getResults();
+        if(budgets.size()==0)
+            throw new ServiceException("Δεν βρέθηκαν προυπολογισμοί για το συγκεκριμένο έργο");
+
+        request.setBudgetId(budgets.get(0).getId());
 
         List<String> pois = new ArrayList<>();
 

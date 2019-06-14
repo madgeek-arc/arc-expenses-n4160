@@ -11,6 +11,7 @@ import eu.openminted.store.restclient.StoreRESTClient;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -100,7 +101,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
 
     public String generateID() {
-        return new SimpleDateFormat("yyyyMMdd").format(new Date())+"-"+getMaxID();
+        return new SimpleDateFormat("yyyyMMdd").format(new Date())+"-"+getMaxID()+"-b1";
     }
 
 
@@ -226,7 +227,58 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
     }
 
+    @PreAuthorize("hasPermission(#budget,'WRITE')")
+    public JSONObject amountsOfBudget(Budget budget){
 
+        MapSqlParameterSource in = new MapSqlParameterSource();
+        in.addValue("budgetId",budget.getId());
+        JSONObject jsonObject = new JSONObject();
+        JSONObject innerObject = new JSONObject();
+
+        innerObject.put("total",budget.getRegularAmount());
+        String query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'REGULAR' AND request_status='ACCEPTED' AND request_budget=:budgetId";
+        Float result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
+            rs.next();
+            return rs.getFloat("sum");
+        });
+        innerObject.put("paid",result);
+        jsonObject.put("REGULAR",innerObject);
+        innerObject = new JSONObject();
+
+        innerObject.put("total",budget.getTripAmount());
+        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'TRIP' AND request_status='ACCEPTED' AND request_budget=:budgetId";
+        result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
+            rs.next();
+            return rs.getFloat("sum");
+        });
+        innerObject.put("paid",result);
+        jsonObject.put("TRIP",innerObject);
+        innerObject = new JSONObject();
+
+
+        innerObject.put("total",budget.getServicesContractAmount());
+        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'TRIP' AND request_status='SERVICES_CONTRACT' AND request_budget=:budgetId";
+        result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
+            rs.next();
+            return rs.getFloat("sum");
+        });
+        innerObject.put("paid",result);
+        jsonObject.put("SERVICES_CONTRACT",innerObject);
+        innerObject = new JSONObject();
+
+
+        innerObject.put("total",budget.getContractAmount());
+        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'TRIP' AND request_status='CONTRACT' AND request_budget=:budgetId";
+        result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
+            rs.next();
+            return rs.getFloat("sum");
+        });
+        innerObject.put("paid",result);
+        jsonObject.put("CONTRACT",innerObject);
+
+        return jsonObject;
+
+    }
 
     @PreAuthorize("hasRole('ROLE_OPERATOR') or hasRole('ROLE_ADMIN')")
     public Budget add(String projectId,
@@ -247,16 +299,16 @@ public class BudgetServiceImpl extends GenericService<Budget> {
             throw new ServiceException("Logged in user not found in DB...(!)");
 
         if(project == null)
-            throw new ServiceException("Project not found");
+            throw new ServiceException("Δεν βρέθηκε το έργο");
 
         if(!boardDecision.isPresent() || !technicalReport.isPresent())
-            throw new ServiceException("Required attachments are missing");
+            throw new ServiceException("Παρακαλώ προσθέστε τα απαραίτητα συνημμένα");
 
         if(regularAmount < 0 || contractAmount < 0 || tripAmount < 0 || servicesContractAmount < 0)
-            throw new ServiceException("Negative amounts are not accepted");
+            throw new ServiceException("Δεν επιτρέπονται αρνητικές τιμές στα ποσά");
 
         if(alreadyExists(project,year))
-            throw new ServiceException("A year budget for this project already exists");
+            throw new ServiceException("Υπάρχει ήδη προυπολογισμός γι αυτό το έτος");
 
         boolean isProjectsOperator = false;
         for(PersonOfInterest poi : project.getOperator()){
@@ -268,7 +320,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
         Collection<SimpleGrantedAuthority> authorities = (Collection<SimpleGrantedAuthority>) SecurityContextHolder.getContext().getAuthentication().getAuthorities();
         if(!isProjectsOperator && !authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
-            throw new ServiceException("Not an operator for specific project");
+            throw new ServiceException("Ο χρήστης δεν είναι χειριστής του έργου");
 
 
         List<String> pois = new ArrayList<>();

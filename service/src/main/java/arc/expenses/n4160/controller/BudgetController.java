@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,7 +185,17 @@ public class BudgetController {
         return budgetService.getBudgetResponse(budget);
     }
 
-    @RequestMapping(value = "/store/uploadFile", method = RequestMethod.POST,produces = MediaType.APPLICATION_JSON_VALUE)
+
+    @RequestMapping(value =  "/getAmounts/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity getAmountsOfBudget(@PathVariable("id") String id) throws Exception {
+        Budget budget = budgetService.get(id);
+        if(budget == null)
+            throw new ResourceNotFoundException();
+        return new ResponseEntity(budgetService.amountsOfBudget(budget).toString(), HttpStatus.OK);
+    }
+
+
+    @RequestMapping(value = "/store/uploadFile", method = RequestMethod.POST)
     public ResponseEntity<Object> uploadFile(@RequestParam("archiveID") String archiveID,
                                              @RequestParam("stage") String stage,
                                              @RequestParam("file") MultipartFile file) throws IOException {

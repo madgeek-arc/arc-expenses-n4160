@@ -31,6 +31,11 @@
       "type": "java.lang.String"
     },
     {
+      "name": "request_budget",
+      "path": "$.budgetId",
+      "type": "java.lang.String"
+    },
+    {
       "name": "request_diataktis",
       "path": "$.diataktis.email",
       "type": "java.lang.String"

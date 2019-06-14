@@ -511,6 +511,38 @@ public class BudgetStateMachineConfiguration extends EnumStateMachineConfigurerA
                         throw new ServiceException(e.getMessage());
                     }
                 })
+                .and()
+                .withExternal()
+                .source(BudgetStages.FINISHED)
+                .target(BudgetStages.FINISHED)
+                .event(StageEvents.EDIT)
+                .guard(stateContext -> transitionService.checkContainsBudget(stateContext, Stage5a.class))
+                .action(context -> {
+                    Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
+                    MultipartHttpServletRequest req = (MultipartHttpServletRequest) context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+                    try {
+                        if(req.getParameter("contractAmount") != null)
+                            budget.setContractAmount(Double.parseDouble(req.getParameter("contractAmount")));
+
+                        if(req.getParameter("regularAmount") != null)
+                            budget.setRegularAmount(Double.parseDouble(req.getParameter("regularAmount")));
+
+                        if(req.getParameter("tripAmount") !=null)
+                            budget.setTripAmount(Double.parseDouble(req.getParameter("tripAmount")));
+
+                        if(req.getParameter("servicesContractAmount") != null)
+                            budget.setServicesContractAmount(Double.parseDouble(req.getParameter("servicesContractAmount")));
+
+                        if(req.getParameter("comment") != null)
+                            budget.setComment(req.getParameter("comment"));
+
+                        budgetService.update(budget,budget.getId());
+                    } catch (Exception e) {
+                        logger.error("Error occurred on edit budget " + budget.getId(),e);
+                        context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
+                        throw new ServiceException(e.getMessage());
+                    }
+                })
         ;
     }
 

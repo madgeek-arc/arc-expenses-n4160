@@ -35,6 +35,9 @@
     "projectId": {
       "type": "string"
     },
+    "budgetId": {
+      "type": "string"
+    },
     "user": {
       "javaType": "arc.athenarc.n4160.domain.User"
     },

@@ -13,9 +13,11 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.hibernate.service.spi.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
@@ -376,7 +378,18 @@ public class TransitionService {
         stage.setDate(new Date().toInstant().toEpochMilli());
         modifyRequestBudget(context, stage, toStage, (fromStage.equals("6") && toStage.equals("6") ? Budget.BudgetStatus.ACCEPTED : Budget.BudgetStatus.PENDING));
         Project project = projectService.get(budget.getProjectId());
-        updatingPermissions(fromStage,toStage, project, "APPROVE", Budget.class,budget.getId(), stage.getDate()+"");
+        if(fromStage.equals("6") && toStage.equals("6")) {
+            aclService.removeEdit(budget.getId(),Budget.class);
+            aclService.removeWrite(budget.getId(),Budget.class);
+            ArrayList<Sid> principals = new ArrayList<>();
+            principals.add(new GrantedAuthoritySid("ROLE_ADMIN"));
+            project.getOperator().forEach( operator -> {
+                principals.add(new PrincipalSid(operator.getEmail()));
+                operator.getDelegates().forEach(delegate -> principals.add(new PrincipalSid(delegate.getEmail())));
+            });
+            aclService.addWrite(principals,budget.getId(),Budget.class);
+        }else
+            updatingPermissions(fromStage,toStage, project, "APPROVE", Budget.class,budget.getId(), stage.getDate()+"");
 
     }
 
@@ -839,14 +852,21 @@ public class TransitionService {
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
                 RequestApproval requestApproval = requestApprovalService.getApproval(requestId);
-                if(requestApproval.getStage5b()==null){
-                    grantWrite.add(new PrincipalSid(diataktis.getEmail()));
-                    String finalRequester2 = requester;
-                    diataktis.getDelegates().forEach(delegate -> {
-                        if(!finalRequester2.equalsIgnoreCase(delegate.getEmail()))
+                if(requestApproval !=null) {
+                    if (requestApproval.getStage5b() == null) {
+                        grantWrite.add(new PrincipalSid(diataktis.getEmail()));
+                        String finalRequester2 = requester;
+                        diataktis.getDelegates().forEach(delegate -> {
+                            if (!finalRequester2.equalsIgnoreCase(delegate.getEmail()))
+                                grantWrite.add(new PrincipalSid(delegate.getEmail()));
+                        });
+                    } else {
+                        grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
+                        organization.getDioikitikoSumvoulio().getDelegates().forEach(delegate -> {
                             grantWrite.add(new PrincipalSid(delegate.getEmail()));
-                    });
-                }else {
+                        });
+                    }
+                }else{
                     grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
                     organization.getDioikitikoSumvoulio().getDelegates().forEach(delegate -> {
                         grantWrite.add(new PrincipalSid(delegate.getEmail()));
