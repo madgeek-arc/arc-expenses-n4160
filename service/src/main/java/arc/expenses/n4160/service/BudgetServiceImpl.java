@@ -257,7 +257,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
 
         innerObject.put("total",budget.getServicesContractAmount());
-        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'TRIP' AND request_status='SERVICES_CONTRACT' AND request_budget=:budgetId";
+        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'SERVICES_CONTRACT' AND request_status='ACCEPTED' AND request_budget=:budgetId";
         result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
             rs.next();
             return rs.getFloat("sum");
@@ -268,7 +268,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
 
         innerObject.put("total",budget.getContractAmount());
-        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'TRIP' AND request_status='CONTRACT' AND request_budget=:budgetId";
+        query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = 'CONTRACT' AND request_status='ACCEPTED' AND request_budget=:budgetId";
         result = new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
             rs.next();
             return rs.getFloat("sum");
@@ -278,6 +278,18 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
         return jsonObject;
 
+    }
+
+    public Float getAmountPerType(Budget budget, String type){
+        MapSqlParameterSource in = new MapSqlParameterSource();
+        in.addValue("budgetId",budget.getId());
+        in.addValue("type",type);
+
+        String query = "SELECT coalesce(SUM(request_final_amount),0) as sum  from request_view where request_type = :type AND request_status='ACCEPTED' AND request_budget=:budgetId";
+        return new NamedParameterJdbcTemplate(dataSource).query(query, in, rs -> {
+            rs.next();
+            return rs.getFloat("sum");
+        });
     }
 
     @PreAuthorize("hasRole('ROLE_OPERATOR') or hasRole('ROLE_ADMIN')")

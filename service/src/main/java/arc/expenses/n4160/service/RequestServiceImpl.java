@@ -160,6 +160,22 @@ public class RequestServiceImpl extends GenericService<Request> {
         if(budgets.size()==0)
             throw new ServiceException("Δεν βρέθηκαν προυπολογισμοί για το συγκεκριμένο έργο");
 
+        if(type == Request.Type.REGULAR){
+            if(amount + budgetService.getAmountPerType(budgets.get(0),"REGULAR") > budgets.get(0).getRegularAmount())
+                throw new ServiceException("Οι πόροι που έχουν οριστεί στον προυπολογισμό για πρωτογενή αιτήματα δεν επαρκούν για το αίτημα");
+        }else if(type == Request.Type.CONTRACT){
+            if(amount + budgetService.getAmountPerType(budgets.get(0),"CONTRACT") > budgets.get(0).getContractAmount())
+                throw new ServiceException("Οι πόροι που έχουν οριστεί στον προυπολογισμό για συμβάσεις έργου δεν επαρκούν για το αίτημα");
+        }else if(type == Request.Type.SERVICES_CONTRACT){
+            if(amount + budgetService.getAmountPerType(budgets.get(0),"SERVICES_CONTRACT") > budgets.get(0).getServicesContractAmount())
+                throw new ServiceException("Οι πόροι που έχουν οριστεί στον προυπολογισμό για συμβάσεις υπηρεσιών δεν επαρκούν για το αίτημα");
+        }else if(type == Request.Type.TRIP){
+            if(amount + budgetService.getAmountPerType(budgets.get(0),"TRIP") > budgets.get(0).getTripAmount())
+                throw new ServiceException("Οι πόροι που έχουν οριστεί στον προυπολογισμό για ταξίδια δεν επαρκούν για το αίτημα");
+        }else{
+            throw new ServiceException("Άγνωστος τύπος αιτήματος");
+        }
+
         request.setBudgetId(budgets.get(0).getId());
 
         List<String> pois = new ArrayList<>();
