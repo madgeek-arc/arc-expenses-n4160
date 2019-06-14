@@ -588,7 +588,7 @@ public class RequestServiceImpl extends GenericService<Request> {
                 request.setDiataktis(institute.getDiataktis());
             else{
                 request.setDiataktis(institute.getDiataktis());
-                if((project.getScientificCoordinatorAsDiataktis()!=null && project.getScientificCoordinatorAsDiataktis() && !request.getUser().getEmail().equals(project.getScientificCoordinator().getEmail())) && request.getFinalAmount()<=2500  && doesntExceedBudget(project.getScientificCoordinator(),project.getId(), request.getFinalAmount()))
+                if((!request.getUser().getEmail().equals(project.getScientificCoordinator().getEmail())) && request.getFinalAmount()<=2500  && doesntExceedBudget(project.getScientificCoordinator(),project.getId(), request.getFinalAmount()))
                     request.setDiataktis(project.getScientificCoordinator());
 
                 if(request.getUser().getEmail().equals(request.getDiataktis().getEmail())){

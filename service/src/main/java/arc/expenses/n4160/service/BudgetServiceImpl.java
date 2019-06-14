@@ -226,6 +226,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
     }
 
 
+    @PreAuthorize("hasRole('ROLE_OPERATOR')")
     public Budget add(String projectId,
                       int year,
                       Double regularAmount,
@@ -478,9 +479,9 @@ public class BudgetServiceImpl extends GenericService<Budget> {
             }
         }
 
-        String aclEntriesQuery = "select distinct on (d.object_id_identity) d.object_id_identity as id, b.requester as requester, b.year, b.project as project_id, d.creation_date, d.stage, d.status, d.canEdit, p.project_acronym, i.institute_id, i.institute_name, p.project_scientificcoordinator, p.project_operator, p.project_operator_delegate" +
+        String aclEntriesQuery = "select distinct on (d.object_id_identity) d.object_id_identity as id, d.requester as requester, d.year, d.project as project_id, d.creation_date, d.stage, d.status, d.canEdit, p.project_acronym, i.institute_id, i.institute_name, p.project_scientificcoordinator, p.project_operator, p.project_operator_delegate" +
                 " from (" +
-                "select o.object_id_identity, b.stage, b.status, b.budget_id, b.creation_date, e.mask, CASE WHEN mask=32 and b.status in ('PENDING','UNDER_REVIEW') THEN true ELSE false END AS canEdit" +
+                "select o.object_id_identity, b.stage, b.status, b.budget_id,b.requester, b.year, b.project, b.creation_date, e.mask, CASE WHEN mask=32 and b.status in ('PENDING','UNDER_REVIEW') THEN true ELSE false END AS canEdit" +
                 " from acl_entry e, acl_object_identity o, acl_sid s, budget_view b" +
                 " where e.acl_object_identity = o.id and o.object_id_identity=b.budget_id and e.sid = s.id and s.sid in ('"+SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString().toLowerCase()+"'"+(isAdmin ? ", 'ROLE_ADMIN'" : "")+" )" +
                 ") d, project_view p, institute_view i, budget_view b" +
@@ -500,13 +501,13 @@ public class BudgetServiceImpl extends GenericService<Budget> {
         in.addValue("offset",from);
         in.addValue("limit",quantity);
 
-
-        System.out.println(viewQuery);
+        logger.info(viewQuery);
 
         return new NamedParameterJdbcTemplate(dataSource).query(viewQuery, in, rs -> {
             List<BudgetSummary> results = new ArrayList<>();
             int totals = 0;
             while(rs.next()){
+                logger.info(rs.getString("requester"));
                 totals = rs.getInt("totals");
                 BudgetSummary budgetSummary = new BudgetSummary();
 
@@ -515,6 +516,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
                 budgetSummary.setProjectId(rs.getString("project_id"));
                 budgetSummary.setProjectAcronym(rs.getString("project_acronym"));
                 budgetSummary.setYear(rs.getInt("year"));
+                budgetSummary.setInstituteName(rs.getString("institute_name"));
 
                 try {
                     User user = userService.getByField("user_email",rs.getString("requester"));

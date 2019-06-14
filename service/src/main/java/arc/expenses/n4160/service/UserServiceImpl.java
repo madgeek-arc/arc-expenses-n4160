@@ -81,10 +81,7 @@ public class UserServiceImpl extends GenericService<User> {
     }
 
     private boolean isOperator(String email) {
-
-
-        return searchService.cqlQuery("operator="+email,"project",1,0,"","ASC").getResults().size()>0;
-
+        return searchService.cqlQuery("project_operator="+email,"project",1,0,"","ASC").getResults().size()>0;
     }
 
     private boolean isExecutive(String email) {

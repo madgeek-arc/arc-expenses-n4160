@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -139,6 +140,7 @@ public class BudgetController {
             @ApiImplicitParam(name = "technicalReport", value = "The technical report", dataType = "file", paramType = "form"),
             @ApiImplicitParam(name = "comment", value = "Any comment regarding the budget request", dataType = "string", paramType = "form")
     })
+    @PreAuthorize("hasRole('ROLE_OPERATOR')")
     @RequestMapping(value = "/add", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public Budget addBudget(
             @RequestParam(value = "projectId") String projectId,
