@@ -29,6 +29,7 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AlreadyExistsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
@@ -226,7 +227,8 @@ public class BudgetServiceImpl extends GenericService<Budget> {
     }
 
 
-    @PreAuthorize("hasRole('ROLE_OPERATOR')")
+
+    @PreAuthorize("hasRole('ROLE_OPERATOR') or hasRole('ROLE_ADMIN')")
     public Budget add(String projectId,
                       int year,
                       Double regularAmount,
@@ -255,6 +257,19 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
         if(alreadyExists(project,year))
             throw new ServiceException("A year budget for this project already exists");
+
+        boolean isProjectsOperator = false;
+        for(PersonOfInterest poi : project.getOperator()){
+            if (poi.getEmail().equals(user.getEmail())){
+                isProjectsOperator=true;
+                break;
+            }
+        }
+
+        Collection<SimpleGrantedAuthority> authorities = (Collection<SimpleGrantedAuthority>) SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+        if(!isProjectsOperator && !authorities.contains(new SimpleGrantedAuthority("ROLE_ADMIN")))
+            throw new ServiceException("Not an operator for specific project");
+
 
         List<String> pois = new ArrayList<>();
         pois.add(user.getEmail());

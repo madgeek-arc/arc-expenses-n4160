@@ -140,7 +140,7 @@ public class BudgetController {
             @ApiImplicitParam(name = "technicalReport", value = "The technical report", dataType = "file", paramType = "form"),
             @ApiImplicitParam(name = "comment", value = "Any comment regarding the budget request", dataType = "string", paramType = "form")
     })
-    @PreAuthorize("hasRole('ROLE_OPERATOR')")
+    @PreAuthorize("hasRole('ROLE_OPERATOR') or hasRole('ROLE_ADMIN')")
     @RequestMapping(value = "/add", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public Budget addBudget(
             @RequestParam(value = "projectId") String projectId,
@@ -156,6 +156,7 @@ public class BudgetController {
         return budgetService.add(projectId, year, regularAmount, contractAmount, tripAmount, servicesContractAmount, boardDecision, technicalReport, comment);
     }
 
+    @PreAuthorize("hasRole('ROLE_EXECUTIVE') or hasRole('ROLE_ADMIN')")
     @RequestMapping(value =  "/getAll", method = RequestMethod.GET)
     public Paging<BudgetSummary> getAllRequests(@RequestParam(value = "from",required=false,defaultValue = "0") int from,
                                                  @RequestParam(value = "quantity",required=false,defaultValue = "10") int quantity,
