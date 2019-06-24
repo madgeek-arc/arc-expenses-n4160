@@ -96,8 +96,6 @@ public class ProjectServiceImpl extends GenericService<Project> {
 
             logger.info("Found " + requests.size() + " requests, processing them..");
 
-            requestService.updateDiataktis(requests,newProject);
-
             requests = requestService.getAll(filter,null).getResults();
 
             Map<String, Sid> mappingNewSids = new HashMap<>();

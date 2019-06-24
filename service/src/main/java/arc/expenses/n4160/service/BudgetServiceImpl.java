@@ -3,7 +3,6 @@ package arc.expenses.n4160.service;
 import arc.athenarc.n4160.domain.*;
 import arc.expenses.n4160.acl.ArcPermission;
 import arc.expenses.n4160.domain.*;
-import eu.openminted.registry.core.domain.FacetFilter;
 import eu.openminted.registry.core.domain.Paging;
 import eu.openminted.registry.core.exception.ResourceNotFoundException;
 import eu.openminted.registry.core.service.ServiceException;
@@ -13,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -82,8 +82,9 @@ public class BudgetServiceImpl extends GenericService<Budget> {
     private InstituteServiceImpl instituteService;
 
     @Autowired
+    @Qualifier("budgetFactory")
     @Lazy
-    private StateMachineFactory<BudgetStages, StageEvents> factory;
+    private StateMachineFactory<BudgetStages, StageEvents> budgetFactory;
 
 
     @Value("#{'${admin.emails}'.split(',')}")
@@ -107,7 +108,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
     private StateMachine<BudgetStages, StageEvents> build(Budget budget){
 
-        StateMachine<BudgetStages, StageEvents> sm = this.factory.getStateMachine(budget.getId());
+        StateMachine<BudgetStages, StageEvents> sm = this.budgetFactory.getStateMachine(budget.getId());
         sm.stop();
 
         sm.getStateMachineAccessor()

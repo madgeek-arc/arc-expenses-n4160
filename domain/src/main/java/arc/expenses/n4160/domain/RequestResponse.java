@@ -12,6 +12,8 @@ public class RequestResponse {
     private Request.Type type;
     private Request.RequestStatus requestStatus;
     private Map<String, Stage> stages;
+    private Double total;
+    private Double paid;
 
     private String projectAcronym;
     private String instituteName;
@@ -20,6 +22,7 @@ public class RequestResponse {
     private String onBehalfFullName;
     private String onBehalfEmail;
     private String tripDestination;
+    private String budgetId;
     private boolean canEdit;
     private boolean canEditPrevious;
 
@@ -135,5 +138,29 @@ public class RequestResponse {
 
     public void setCanEditPrevious(boolean canEditPrevious) {
         this.canEditPrevious = canEditPrevious;
+    }
+
+    public Double getTotal() {
+        return total;
+    }
+
+    public void setTotal(Double total) {
+        this.total = total;
+    }
+
+    public Double getPaid() {
+        return paid;
+    }
+
+    public void setPaid(Double paid) {
+        this.paid = paid;
+    }
+
+    public String getBudgetId() {
+        return budgetId;
+    }
+
+    public void setBudgetId(String budgetId) {
+        this.budgetId = budgetId;
     }
 }

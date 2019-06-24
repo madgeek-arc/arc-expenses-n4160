@@ -11,9 +11,8 @@ import org.springframework.security.web.access.intercept.FilterSecurityIntercept
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity
 @Order(1)
-@ComponentScan("arc.expenses.config.security")
+@ComponentScan("arc.expenses.n4160.config.security")
 public class IDPConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired

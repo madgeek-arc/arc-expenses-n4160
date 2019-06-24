@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.messaging.Message;
@@ -32,7 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @Configuration
-@EnableStateMachineFactory
+@EnableStateMachineFactory(name = "budgetFactory")
 public class BudgetStateMachineConfiguration extends EnumStateMachineConfigurerAdapter<BudgetStages, StageEvents> {
 
     private static Logger logger = LogManager.getLogger(BudgetStateMachineConfiguration.class);
@@ -90,7 +91,7 @@ public class BudgetStateMachineConfiguration extends EnumStateMachineConfigurerA
     }
 
     @Override
-    @DependsOn("factory")
+    @DependsOn("budgetFactory")
     public void configure(StateMachineTransitionConfigurer<BudgetStages, StageEvents> transitions) throws Exception {
 
         transitions.withExternal()

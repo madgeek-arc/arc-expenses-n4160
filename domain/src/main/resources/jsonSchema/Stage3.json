@@ -9,12 +9,6 @@
     "fundsAvailable": {
       "type": "boolean"
     },
-    "loan": {
-      "type": "boolean"
-    },
-    "loanSource": {
-      "type": "string"
-    },
     "approved": {
       "type": "boolean"
     }

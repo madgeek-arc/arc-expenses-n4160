@@ -14,9 +14,6 @@ import java.io.IOException;
 @Component
 public class SAMLRedirectFilter extends GenericFilterBean {
 
-
-
-
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;

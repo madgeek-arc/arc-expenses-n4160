@@ -5,6 +5,9 @@
   "properties": {
     "approved": {
       "type": "boolean"
+    },
+    "loan": {
+      "type": "boolean"
     }
   },
   "extends": {

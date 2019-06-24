@@ -9,6 +9,7 @@ import eu.openminted.registry.core.service.ServiceException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.messaging.Message;
@@ -45,14 +46,15 @@ public class RequestApprovalServiceImpl extends GenericService<RequestApproval> 
     private InstituteServiceImpl instituteService;
 
     @Autowired
-    private TransitionService transitionService;
+    private BudgetServiceImpl budgetService;
 
     @Autowired
     private DataSource dataSource;
 
     @Autowired
+    @Qualifier("requestFactory")
     @Lazy
-    private StateMachineFactory<NormalStages, StageEvents> factory;
+    private StateMachineFactory<NormalStages, StageEvents> requestFactory;
 
     public RequestApprovalServiceImpl() {
         super(RequestApproval.class);
@@ -73,7 +75,7 @@ public class RequestApprovalServiceImpl extends GenericService<RequestApproval> 
 
     private StateMachine<NormalStages, StageEvents> build(RequestApproval requestApproval){
 
-        StateMachine<NormalStages, StageEvents> sm = this.factory.getStateMachine(requestApproval.getId());
+        StateMachine<NormalStages, StageEvents> sm = this.requestFactory.getStateMachine(requestApproval.getId());
         sm.stop();
 
         sm.getStateMachineAccessor()
@@ -243,6 +245,20 @@ public class RequestApprovalServiceImpl extends GenericService<RequestApproval> 
         requestResponse.setInstituteName(institute.getName());
         requestResponse.setRequesterFullName(request.getUser().getFirstname() + " " + request.getUser().getLastname());
         requestResponse.setRequesterEmail(request.getUser().getEmail());
+
+
+        Budget budget = budgetService.get(request.getBudgetId());
+        if(request.getType().equals(Request.Type.REGULAR))
+            requestResponse.setTotal(budget.getRegularAmount());
+        else if(request.getType().equals(Request.Type.CONTRACT))
+            requestResponse.setTotal(budget.getContractAmount());
+        else if(request.getType().equals(Request.Type.SERVICES_CONTRACT))
+            requestResponse.setTotal(budget.getServicesContractAmount());
+        else if(request.getType().equals(Request.Type.TRIP))
+            requestResponse.setTotal(budget.getTripAmount());
+
+        requestResponse.setPaid((double) budgetService.getAmountPerType(budget,request.getType().value()));
+
         if(request.getOnBehalfOf()!=null) {
             requestResponse.setOnBehalfFullName(request.getOnBehalfOf().getFirstname() + " " + request.getOnBehalfOf().getLastname());
             requestResponse.setOnBehalfEmail(request.getOnBehalfOf().getEmail());
