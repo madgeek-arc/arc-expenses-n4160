@@ -305,16 +305,6 @@ public class RequestPaymentServiceImpl extends GenericService<RequestPayment> {
             });
         }
 
-        if(request.getType() != Request.Type.SERVICES_CONTRACT){
-            acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new PrincipalSid(institute.getDiaugeia().getEmail()), true);
-            institute.getDiaugeia().getDelegates().forEach(delegate -> acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new PrincipalSid(delegate.getEmail()), true));
-        }else{
-            if(payments.getTotal()==0){
-                acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new PrincipalSid(institute.getDiaugeia().getEmail()), true);
-                institute.getDiaugeia().getDelegates().forEach(delegate -> acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new PrincipalSid(delegate.getEmail()), true));
-            }
-        }
-
 
         acl.insertAce(acl.getEntries().size(), ArcPermission.READ, new GrantedAuthoritySid("ROLE_ADMIN"), true);
         acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new GrantedAuthoritySid("ROLE_ADMIN"), true);

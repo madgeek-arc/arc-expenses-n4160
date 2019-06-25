@@ -82,6 +82,9 @@ public class BudgetServiceImpl extends GenericService<Budget> {
     private InstituteServiceImpl instituteService;
 
     @Autowired
+    private MailService mailService;
+
+    @Autowired
     @Qualifier("budgetFactory")
     @Lazy
     private StateMachineFactory<BudgetStages, StageEvents> budgetFactory;
@@ -373,13 +376,17 @@ public class BudgetServiceImpl extends GenericService<Budget> {
 
 
 
-        updateAcls(project, budget);
+        budget = updateAcls(project, budget);
+
+        mailService.sendMail("INITIAL",budget.getId(), budget.getDate()+"", projectId, budget.getPois());
 
         return budget;
 
     }
 
-    private void updateAcls(Project project, Budget budget){
+    private Budget updateAcls(Project project, Budget budget){
+
+        List<String> pois = new ArrayList<>();
         try{
             aclService.createAcl(new ObjectIdentityImpl(Budget.class, budget.getId()));
         }catch (AlreadyExistsException ex){
@@ -402,7 +409,24 @@ public class BudgetServiceImpl extends GenericService<Budget> {
         acl.insertAce(acl.getEntries().size(), ArcPermission.WRITE, new PrincipalSid(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString()), true);
 
         acl.setOwner(new GrantedAuthoritySid(("ROLE_USER")));
+
+        pois.add(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        pois.add(project.getScientificCoordinator().getEmail());
+        project.getScientificCoordinator().getDelegates().forEach(delegate -> pois.add(delegate.getEmail()));
+
+        if(budget.getPois()==null)
+            budget.setPois(pois);
+        else {
+            for(String poi : budget.getPois()) {
+                if(pois.contains(poi))
+                    pois.remove(poi);
+            }
+            pois.addAll(budget.getPois());
+            budget.setPois(pois);
+        }
         aclService.updateAcl(acl);
+
+        return budget;
     }
 
     public int getMaxID() {
@@ -587,7 +611,6 @@ public class BudgetServiceImpl extends GenericService<Budget> {
             List<BudgetSummary> results = new ArrayList<>();
             int totals = 0;
             while(rs.next()){
-                logger.info(rs.getString("requester"));
                 totals = rs.getInt("totals");
                 BudgetSummary budgetSummary = new BudgetSummary();
 

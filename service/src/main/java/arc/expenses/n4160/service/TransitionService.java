@@ -339,7 +339,7 @@ public class TransitionService {
         aclService.removeWrite(budget.getId(),Budget.class);
         budgetService.update(budget,budget.getId());
 
-        mailService.sendMail("CANCEL", budget.getId(), budget.getDate()+"", budget.getPois());
+        mailService.sendMail("CANCEL", budget.getId(), budget.getDate()+"", budget.getProjectId(), budget.getPois());
 
     }
 
@@ -431,7 +431,7 @@ public class TransitionService {
         budgetService.update(budget,budget.getId());
 
         if(status == Budget.BudgetStatus.REJECTED){
-            mailService.sendMail("REJECT", budget.getId(), budget.getDate()+"",budget.getPois());
+            mailService.sendMail("REJECT", budget.getId(), budget.getDate()+"",budget.getProjectId(), budget.getPois());
         }
     }
 
@@ -480,7 +480,7 @@ public class TransitionService {
                 requestPaymentService.createPayment(request);
             }
             Project project = projectService.get(request.getProjectId());
-            updatingPermissions("6","7",project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
+            updatingPermissions("5b","FINISHED",project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
             aclService.removeEdit(requestApproval.getId(),RequestApproval.class);
             requestService.update(request,request.getId());
         }
@@ -552,7 +552,7 @@ public class TransitionService {
         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
         stage.setDate(new Date().toInstant().toEpochMilli());
         Request request = requestService.get(requestApproval.getRequestId());
-        modifyRequestApproval(context, stage, toStage, (toStage.equals("6") ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
+        modifyRequestApproval(context, stage, toStage, (toStage.equals("7") ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
 
         if(toStage.equalsIgnoreCase("5b")){
             Project project = projectService.get(request.getProjectId());
@@ -882,7 +882,6 @@ public class TransitionService {
                         grantAccess.add(new PrincipalSid(delegate.getEmail()));
                     });
                 }
-
                 grantWrite.add(new PrincipalSid(institute.getDiaugeia().getEmail()));
                 institute.getDiaugeia().getDelegates().forEach(delegate -> {
                     grantWrite.add(new PrincipalSid(delegate.getEmail()));
@@ -989,6 +988,20 @@ public class TransitionService {
                     grantWrite.add(new PrincipalSid(delegate.getEmail()));
                 });
                 break;
+            case "FINISHED":
+                requestApproval = requestApprovalService.getApproval(requestId);
+                if(requestApproval!=null && requestApproval.getStage5b() != null){
+                    grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
+                    organization.getDioikitikoSumvoulio().getDelegates().forEach( delegate -> {
+                        grantWrite.add(new PrincipalSid(delegate.getEmail()));
+                    });
+                }else if(requestApproval != null && requestApproval.getStage5b()==null){
+                    project.getOperator().forEach(operator -> {
+                        grantWrite.add(new PrincipalSid(operator.getEmail()));
+                        operator.getDelegates().forEach(delegate -> grantWrite.add(new PrincipalSid(delegate.getEmail())));
+                    });
+                }
+                break;
             default:
                 break;
         }
@@ -1005,7 +1018,7 @@ public class TransitionService {
                 mailService.sendMail(mailType, request.getId(), project.getAcronym(), dateToSend, request.getFinalAmount() + "", requestApprovalService.getApproval(request.getId()).getStage1().getSubject(), isPayment, id, grantAccess.stream().map(entry -> ((PrincipalSid) entry).getPrincipal()).collect(Collectors.toList()));
             }else{
 
-                mailService.sendMail(mailType, budget.getId(), dateToSend, grantAccess.stream().map(entry -> ((PrincipalSid) entry).getPrincipal()).collect(Collectors.toList()));
+                mailService.sendMail(mailType, budget.getId(), dateToSend, budget.getProjectId(), grantAccess.stream().map(entry -> ((PrincipalSid) entry).getPrincipal()).collect(Collectors.toList()));
             }
         }
 

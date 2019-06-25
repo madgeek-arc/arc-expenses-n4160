@@ -28,6 +28,42 @@ public class MailReceiver {
         String name = "";
         try {
             switch (mailType){
+                case APPROVE_BUDGET:
+                    for(Object toMail : jsonObject.getJSONArray("to")) {
+                        mailMessages.add(new ApproveBudgetMessage((String) toMail,
+                                jsonObject.getString("budget_id"),
+                                jsonObject.getString("project_acronym"),
+                                jsonObject.getString("creation_date"),
+                                jsonObject.getString("url")));
+                    }
+                    break;
+                case INITIAL_BUDGET:
+                    for(Object toMail: jsonObject.getJSONArray("to")){
+                        mailMessages.add(new InitialBudgetMessage((String) toMail,
+                                jsonObject.getString("budget_id"),
+                                jsonObject.getString("project_acronym"),
+                                jsonObject.getString("creation_date"),
+                                jsonObject.getString("url")));
+                    }
+                    break;
+                case REJECT_BUDGET:
+                    for(Object toMail: jsonObject.getJSONArray("to")){
+                        mailMessages.add(new RejectBudgetMessage((String) toMail,
+                                jsonObject.getString("budget_id"),
+                                jsonObject.getString("project_acronym"),
+                                jsonObject.getString("creation_date"),
+                                jsonObject.getString("url")));
+                    }
+                    break;
+                case CANCEL_BUDGET:
+                    for(Object toMail: jsonObject.getJSONArray("to")){
+                        mailMessages.add(new CancelBudgetMessage((String) toMail,
+                                jsonObject.getString("budget_id"),
+                                jsonObject.getString("project_acronym"),
+                                jsonObject.getString("creation_date"),
+                                jsonObject.getString("url")));
+                    }
+                    break;
                 case APPROVE:
                     for(Object toMail : jsonObject.getJSONArray("to")) {
                         mailMessages.add(new ApproveMessage((String) toMail,
@@ -85,7 +121,7 @@ public class MailReceiver {
 
         if(mailMessages==null)
            logger.debug("Unrecognised mail type received " + mailType.name() );
-        else
-            emailService.sendMail(mailMessages);
+//        else
+//            emailService.sendMail(mailMessages);
     }
 }

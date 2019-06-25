@@ -6,6 +6,10 @@ public enum MailType {
     APPROVE,
     CANCEL,
     REJECT,
-    CONTACT
+    CONTACT,
+    INITIAL_BUDGET,
+    APPROVE_BUDGET,
+    CANCEL_BUDGET,
+    REJECT_BUDGET
 
 }

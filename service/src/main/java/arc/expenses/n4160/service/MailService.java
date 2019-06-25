@@ -1,6 +1,7 @@
 package arc.expenses.n4160.service;
 
 
+import arc.athenarc.n4160.domain.Project;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -30,6 +31,11 @@ public class MailService {
     @Value("${request.payment.url}")
     private String requestPaymentUrl;
 
+    @Value("${request.budget.url}")
+    private String requestBudgetUrl;
+
+    @Autowired
+    private ProjectServiceImpl projectService;
 
     public void sendMail(String type, String requestId, String projectAcronym, String creationDate, String finalAmount, String subject, boolean isPayment, String subId, List<String> whoTo){
 
@@ -50,14 +56,27 @@ public class MailService {
         jsonObject.put("to",whoTo);
 
         logger.info(jsonObject.toString());
-//        jmsTemplate.convertAndSend("mailbox", jsonObject.toString());
+        jmsTemplate.convertAndSend("mailbox", jsonObject.toString());
     }
 
-    public void sendMail(String type, String budgetId, String creationDate, List<String> sendTo){
-
+    public void sendMail(String type, String budgetId, String creationDate, String projectId, List<String> sendTo){
+        type = type.concat("_BUDGET");
         logger.info("Sending mail of type "+type + " to " + sendTo.stream().collect(Collectors.joining(",")));
 
+        Project project = projectService.get(projectId);
 
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("message_type",type);
+        jsonObject.put("budget_id",budgetId);
+        jsonObject.put("project_acronym",project.getAcronym());
+        jsonObject.put("creation_date",new SimpleDateFormat("dd-MM-yyyy").format(new Date(Long.parseLong(creationDate))));
+        jsonObject.put("url",requestBudgetUrl+budgetId);
+
+        jsonObject.put("to",sendTo);
+
+        logger.info(jsonObject.toString());
+
+        jmsTemplate.convertAndSend("mailbox", jsonObject.toString());
 
     }
 
