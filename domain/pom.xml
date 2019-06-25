@@ -110,7 +110,7 @@
                 <version>2.1.406</version>
                 <executions>
                     <execution>
-                        <id>java to typeScript</id>
+                        <id>java receiver typeScript</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>

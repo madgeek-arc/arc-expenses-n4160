@@ -1,5 +1,7 @@
 package gr.athenarc.n4160.mailer.services;
 
+import gr.athenarc.n4160.mailer.dao.LogEntityDao;
+import gr.athenarc.n4160.mailer.domain.LogEntity;
 import gr.athenarc.n4160.mailer.domain.MailMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -20,6 +23,10 @@ public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender javaMailSender;
+
+    @Autowired
+    private LogEntityDao logEntityDao;
+
 
     @Override
     public void sendMail(List<MailMessage> mailMessages) {
@@ -32,11 +39,12 @@ public class EmailServiceImpl implements EmailService {
                 helper.setFrom(mailMessage.getFrom(), mailMessage.getFromName());
                 helper.setTo(mailMessage.getTo());
                 helper.setSubject(mailMessage.getSubject());
-                logger.info((String) mimeMessage.getContent());
-                javaMailSender.send(mimeMessage);
+//                javaMailSender.send(mimeMessage);
             } catch (MessagingException | IOException e) {
                 logger.error("Could not send message", e);
             }
+
+            logEntityDao.save(new LogEntity(mailMessage.getTo(),mailMessage.getSubject(), new Date()));
         }
     }
 }

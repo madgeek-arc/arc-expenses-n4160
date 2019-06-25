@@ -1,5 +1,6 @@
 package gr.athenarc.n4160.mailer.services;
 
+import gr.athenarc.n4160.mailer.dao.LogEntityDao;
 import gr.athenarc.n4160.mailer.domain.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -121,7 +122,7 @@ public class MailReceiver {
 
         if(mailMessages==null)
            logger.debug("Unrecognised mail type received " + mailType.name() );
-//        else
-//            emailService.sendMail(mailMessages);
+        else
+            emailService.sendMail(mailMessages);
     }
 }
