@@ -86,7 +86,7 @@
     "lastModified": {
       "javaType": "arc.athenarc.n4160.domain.LastModified"
     },
-    "attachments" : {
+    "additionalBoardDecisions" : {
       "type" : "array",
       "items" :{
         "javaType" : "arc.athenarc.n4160.domain.Attachment"

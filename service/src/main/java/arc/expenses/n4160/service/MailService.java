@@ -57,6 +57,8 @@ public class MailService {
 
         logger.info("Sending mail of type "+type + " to " + sendTo.stream().collect(Collectors.joining(",")));
 
+
+
     }
 
 }

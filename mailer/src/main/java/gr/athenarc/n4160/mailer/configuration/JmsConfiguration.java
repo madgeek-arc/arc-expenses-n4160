@@ -23,7 +23,7 @@ public class JmsConfiguration {
     public ActiveMQConnectionFactory activeMQConnectionFactory() {
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
         activeMQConnectionFactory.setBrokerURL(host);
-        activeMQConnectionFactory.setTrustedPackages(Collections.singletonList("gr.athenarc.mailer.domain"));
+        activeMQConnectionFactory.setTrustedPackages(Collections.singletonList("gr.athenarc.n4160.mailer.domain"));
 
         return activeMQConnectionFactory;
     }

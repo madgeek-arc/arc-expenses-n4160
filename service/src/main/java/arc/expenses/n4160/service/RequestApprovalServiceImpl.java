@@ -258,6 +258,7 @@ public class RequestApprovalServiceImpl extends GenericService<RequestApproval> 
             requestResponse.setTotal(budget.getTripAmount());
 
         requestResponse.setPaid((double) budgetService.getAmountPerType(budget,request.getType().value()));
+        requestResponse.setBudgetId(budget.getId());
 
         if(request.getOnBehalfOf()!=null) {
             requestResponse.setOnBehalfFullName(request.getOnBehalfOf().getFirstname() + " " + request.getOnBehalfOf().getLastname());

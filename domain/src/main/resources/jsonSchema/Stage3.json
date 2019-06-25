@@ -16,8 +16,5 @@
   "extends": {
     "type": "object",
     "javaType": "arc.athenarc.n4160.domain.Stage"
-  },
-  "required": [
-    "loan"
-  ]
+  }
 }

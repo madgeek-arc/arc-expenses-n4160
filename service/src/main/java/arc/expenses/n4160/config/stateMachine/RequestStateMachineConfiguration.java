@@ -287,8 +287,6 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                     .withChoice()
                     .source(NormalStages.Stage5borFinish)
                     .first(NormalStages.FINISHED, context -> {
-                        if(!transitionService.checkContains(context,Stage3.class))
-                            return false;
 
                         try {
                             RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
@@ -299,9 +297,9 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                                             request.getType() == Request.Type.CONTRACT ||
                                             request.getType() == Request.Type.SERVICES_CONTRACT
                             )
-                                return true;
+                                return false;
 
-                            return false;
+                            return true;
                         } catch (Exception e) {
                             logger.error("Error occurred on choice of request ",e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
@@ -315,7 +313,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
 
                             Stage3 stage3 = new Stage3(true,true,true);
                             stage3.setDate(new Date().toInstant().toEpochMilli());
-                            transitionService.approveApproval(context,"3","5b",stage3);
+                            transitionService.approveApproval(context,"3","6",stage3);
                         } catch (Exception e) {
                             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));

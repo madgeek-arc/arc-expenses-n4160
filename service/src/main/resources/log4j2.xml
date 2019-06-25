@@ -28,8 +28,8 @@
         <Logger level="INFO" name="arc.expenses.messages">
             <AppenderRef ref="roll-by-size"/>
         </Logger>
-        <Logger level="INFO" name="org.springframework">
-            <AppenderRef ref="roll-by-size"/>
+        <Logger level="DEBUG" name="org.springframework">
+            <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>
 </Configuration>

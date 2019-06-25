@@ -517,7 +517,6 @@ public class BudgetStateMachineConfiguration extends EnumStateMachineConfigurerA
                 .source(BudgetStages.FINISHED)
                 .target(BudgetStages.FINISHED)
                 .event(StageEvents.EDIT)
-                .guard(stateContext -> transitionService.checkContainsBudget(stateContext, Stage5a.class))
                 .action(context -> {
                     Budget budget = context.getMessage().getHeaders().get("budgetRequest", Budget.class);
                     MultipartHttpServletRequest req = (MultipartHttpServletRequest) context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
@@ -536,6 +535,16 @@ public class BudgetStateMachineConfiguration extends EnumStateMachineConfigurerA
 
                         if(req.getParameter("comment") != null)
                             budget.setComment(req.getParameter("comment"));
+
+                        if(req.getFiles("additionalBoardDecisions").size()!=0){
+                            List<Attachment> additionalBoardDecisions = budget.getAdditionalBoardDecisions();
+                            for(MultipartFile file : req.getFiles("additionalBoardDecisions")){
+                                String checksum = transitionService.checksum(file.getOriginalFilename());
+                                storeRESTClient.storeFile(file.getBytes(), budget.getArchiveId()+"/", checksum);
+                                additionalBoardDecisions.add(new Attachment(file.getOriginalFilename(), FileUtils.extension(file.getOriginalFilename()),new Long(file.getSize()+""), budget.getArchiveId()+"/"+checksum));
+                            }
+                            budget.setAdditionalBoardDecisions(additionalBoardDecisions);
+                        }
 
                         budgetService.update(budget,budget.getId());
                     } catch (Exception e) {
