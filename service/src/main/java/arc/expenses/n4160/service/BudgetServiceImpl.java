@@ -3,6 +3,7 @@ package arc.expenses.n4160.service;
 import arc.athenarc.n4160.domain.*;
 import arc.expenses.n4160.acl.ArcPermission;
 import arc.expenses.n4160.domain.*;
+import eu.openminted.registry.core.domain.FacetFilter;
 import eu.openminted.registry.core.domain.Paging;
 import eu.openminted.registry.core.exception.ResourceNotFoundException;
 import eu.openminted.registry.core.service.ServiceException;
@@ -294,6 +295,42 @@ public class BudgetServiceImpl extends GenericService<Budget> {
             rs.next();
             return rs.getFloat("sum");
         });
+    }
+
+    public List<BudgetsByProject> getBudgetsPerProject(Request request){
+        FacetFilter filter = new FacetFilter();
+        filter.setQuantity(10000);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("project", request.getProjectId());
+        map.put("status","ACCEPTED");
+
+        filter.setFilter(map);
+        List<Budget> budgets = getAll(filter,null).getResults();
+
+        List<BudgetsByProject> budgetsByProjects = new ArrayList<>();
+        for(Budget budget : budgets){
+            BudgetsByProject budgetByProject = new BudgetsByProject();
+            budgetByProject.setId(budget.getId());
+            budgetByProject.setYear(budget.getYear());
+            budgetByProject.setFits(false);
+            if(request.getType() == Request.Type.REGULAR){
+                if(request.getFinalAmount() + getAmountPerType(budget,"REGULAR") < budget.getRegularAmount())
+                    budgetByProject.setFits(true);
+            }else if(request.getType() == Request.Type.CONTRACT){
+                if(request.getFinalAmount() + getAmountPerType(budget,"CONTRACT") < budget.getContractAmount())
+                    budgetByProject.setFits(true);
+            }else if(request.getType() == Request.Type.SERVICES_CONTRACT){
+                if(request.getFinalAmount() + getAmountPerType(budget,"SERVICES_CONTRACT") < budget.getServicesContractAmount())
+                    budgetByProject.setFits(true);
+            }else if(request.getType() == Request.Type.TRIP){
+                if(request.getFinalAmount()+ getAmountPerType(budget,"TRIP") < budget.getTripAmount())
+                    budgetByProject.setFits(true);
+            }
+
+            budgetsByProjects.add(budgetByProject);
+        }
+        return budgetsByProjects;
     }
 
     @PreAuthorize("hasRole('ROLE_OPERATOR') or hasRole('ROLE_ADMIN')")

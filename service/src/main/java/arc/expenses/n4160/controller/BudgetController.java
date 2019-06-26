@@ -110,7 +110,7 @@ public class BudgetController {
         if(budget == null)
             throw new ServiceException("Budget not found");
 
-        budgetService.downgrade(budget,req);
+        budgetService.edit(budget,req);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

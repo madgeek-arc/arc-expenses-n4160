@@ -1,9 +1,14 @@
 package arc.expenses.n4160.controller;
 
 import arc.athenarc.n4160.domain.Project;
+import arc.athenarc.n4160.domain.Request;
+import arc.expenses.n4160.domain.BudgetsByProject;
 import arc.expenses.n4160.domain.Vocabulary;
+import arc.expenses.n4160.service.BudgetServiceImpl;
 import arc.expenses.n4160.service.ProjectServiceImpl;
+import arc.expenses.n4160.service.RequestServiceImpl;
 import eu.openminted.registry.core.domain.Paging;
+import eu.openminted.registry.core.service.ServiceException;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +27,7 @@ public class ProjectController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectController.class);
 
     @Autowired
-    ProjectServiceImpl projectService;
-
+    private ProjectServiceImpl projectService;
 
     @RequestMapping(value =  "/getById/{id}", method = RequestMethod.GET)
     public Project getById(@PathVariable("id") String id) {

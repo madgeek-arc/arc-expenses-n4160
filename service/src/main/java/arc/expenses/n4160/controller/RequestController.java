@@ -1,13 +1,8 @@
 package arc.expenses.n4160.controller;
 
 import arc.athenarc.n4160.domain.*;
-import arc.expenses.n4160.domain.OrderByField;
-import arc.expenses.n4160.domain.OrderByType;
-import arc.expenses.n4160.domain.RequestResponse;
-import arc.expenses.n4160.domain.RequestSummary;
-import arc.expenses.n4160.service.RequestApprovalServiceImpl;
-import arc.expenses.n4160.service.RequestPaymentServiceImpl;
-import arc.expenses.n4160.service.RequestServiceImpl;
+import arc.expenses.n4160.domain.*;
+import arc.expenses.n4160.service.*;
 import eu.openminted.registry.core.domain.Browsing;
 import eu.openminted.registry.core.domain.Paging;
 import eu.openminted.registry.core.exception.ResourceNotFoundException;
@@ -63,6 +58,9 @@ public class RequestController {
 
     @Autowired
     RequestPaymentServiceImpl requestPaymentService;
+
+    @Autowired
+    private BudgetServiceImpl budgetService;
 
 
     @ApiOperation("Finalize request approval")
@@ -227,6 +225,20 @@ public class RequestController {
         return requestService.criteriaSearch(from,quantity,status,type,searchField,stage,orderType,orderField, canEdit, isMine, projectAcronym, institute, requester);
 
     }
+
+
+
+    @RequestMapping(value = "/budgets/{requestId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public List<BudgetsByProject> getBudgetsOfProject(@PathVariable("requestId") String requestId){
+        Request request = requestService.get(requestId);
+        if(request == null)
+            throw new ServiceException("Request not found");
+
+        return budgetService.getBudgetsPerProject(request);
+    }
+
+
+
 
     /*////////////////////////////////////////////////////////////////////////////////////////
                                         OLD STUFF

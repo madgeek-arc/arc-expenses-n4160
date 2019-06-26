@@ -3,6 +3,7 @@ package arc.expenses.n4160.config.stateMachine;
 import arc.athenarc.n4160.domain.*;
 import arc.expenses.n4160.domain.NormalStages;
 import arc.expenses.n4160.domain.StageEvents;
+import arc.expenses.n4160.service.BudgetServiceImpl;
 import arc.expenses.n4160.service.RequestApprovalServiceImpl;
 import arc.expenses.n4160.service.RequestServiceImpl;
 import arc.expenses.n4160.service.TransitionService;
@@ -25,6 +26,7 @@ import org.springframework.statemachine.state.State;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.ws.Service;
 import java.util.*;
 
 @Configuration
@@ -41,6 +43,9 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
 
     @Autowired
     private RequestServiceImpl requestService;
+
+    @Autowired
+    private BudgetServiceImpl budgetService;
 
 
     @Override
@@ -166,6 +171,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                     .guard(stateContext -> transitionService.checkContains(stateContext, Stage2.class))
                     .action(context -> {
                         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
+                        MultipartHttpServletRequest req = (MultipartHttpServletRequest) context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
                         try {
                             Stage2 stage2 = new Stage2(true,true,true);
                             stage2.setDate(new Date().toInstant().toEpochMilli());
@@ -310,10 +316,19 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
                         try {
                             HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
-
+                            if(req.getParameter("newBudget") != null) { //operator asked for a new budget
+                                Request request = requestService.get(requestApproval.getRequestId());
+                                Budget budget = budgetService.get(req.getParameter("newBudget"));
+                                if(budget == null) {
+                                    context.getStateMachine().setStateMachineError(new ServiceException("Given budget does not exist"));
+                                    throw new ServiceException("Given budget does not exist");
+                                }
+                                request.setBudgetId(budget.getId());
+                                requestService.update(request,request.getId());
+                            }
                             Stage3 stage3 = new Stage3(true,true,true);
                             stage3.setDate(new Date().toInstant().toEpochMilli());
-                            transitionService.approveApproval(context,"3","7",stage3);
+                            transitionService.approveApproval(context,"3","3",stage3);
                         } catch (Exception e) {
                             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
@@ -324,6 +339,16 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
                         try {
                             HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
+                            if(req.getParameter("newBudget") != null) { //operator asked for a new budget
+                                Request request = requestService.get(requestApproval.getRequestId());
+                                Budget budget = budgetService.get(req.getParameter("newBudget"));
+                                if(budget == null) {
+                                    context.getStateMachine().setStateMachineError(new ServiceException("Given budget does not exist"));
+                                    throw new ServiceException("Given budget does not exist");
+                                }
+                                request.setBudgetId(budget.getId());
+                                requestService.update(request,request.getId());
+                            }
 
                             Stage3 stage3 = new Stage3(true,true,true);
                             stage3.setDate(new Date().toInstant().toEpochMilli());
@@ -358,7 +383,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
 
                             Stage5b stage5b = new Stage5b(true);
                             stage5b.setDate(new Date().toInstant().toEpochMilli());
-                            transitionService.approveApproval(context,"5b","6",stage5b);
+                            transitionService.approveApproval(context,"5b","5b",stage5b);
                         } catch (Exception e) {
                             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));

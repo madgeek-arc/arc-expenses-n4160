@@ -552,7 +552,8 @@ public class TransitionService {
         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
         stage.setDate(new Date().toInstant().toEpochMilli());
         Request request = requestService.get(requestApproval.getRequestId());
-        modifyRequestApproval(context, stage, toStage, (toStage.equals("7") ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
+
+        modifyRequestApproval(context, stage, toStage, (toStage.equals(fromStage) ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
 
         if(toStage.equalsIgnoreCase("5b")){
             Project project = projectService.get(request.getProjectId());
@@ -840,31 +841,9 @@ public class TransitionService {
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
                 RequestApproval requestApproval = requestApprovalService.getApproval(requestId);
-                if(requestApproval !=null) {
-                    if (requestApproval.getStage5b() == null) {
-                        if(persistentClass == RequestApproval.class) {
-                            grantWrite.add(new PrincipalSid(diataktis.getEmail()));
-                            String finalRequester2 = requester;
-                            diataktis.getDelegates().forEach(delegate -> {
-                                if (!finalRequester2.equalsIgnoreCase(delegate.getEmail()))
-                                    grantWrite.add(new PrincipalSid(delegate.getEmail()));
-                            });
-                        }else if(persistentClass == Budget.class){
-                            project.getOperator().forEach(operator -> {
-                                grantWrite.add(new PrincipalSid(operator.getEmail()));
-                                operator.getDelegates().forEach(delegate -> grantWrite.add(new PrincipalSid(delegate.getEmail())));
-                            });
-
-                        }
-                    } else {
-                        grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
-                        organization.getDioikitikoSumvoulio().getDelegates().forEach(delegate -> {
-                            grantWrite.add(new PrincipalSid(delegate.getEmail()));
-                        });
-                    }
-                }else{
-                    grantWrite.add(new PrincipalSid(organization.getDioikitikoSumvoulio().getEmail()));
-                    organization.getDioikitikoSumvoulio().getDelegates().forEach(delegate -> {
+                if(requestApproval ==null) {
+                    grantWrite.add(new PrincipalSid(institute.getDiataktis().getEmail()));
+                    institute.getDiataktis().getDelegates().forEach(delegate -> {
                         grantWrite.add(new PrincipalSid(delegate.getEmail()));
                     });
                 }
