@@ -620,14 +620,18 @@ public class BudgetServiceImpl extends GenericService<Budget> {
             }
         }
 
-        String aclEntriesQuery = "select distinct on (d.object_id_identity) d.object_id_identity as id, d.requester as requester, d.year, d.project as project_id, d.creation_date, d.stage, d.status, d.canEdit, p.project_acronym, i.institute_id, i.institute_name, p.project_scientificcoordinator, p.project_operator, p.project_operator_delegate" +
+        String aclEntriesQuery = "select distinct on (d.object_id_identity) d.object_id_identity as id," +
+                "d.requester as requester, d.year, d.project as project_id, d.creation_date, d.stage, d.status, d.canEdit, p.project_acronym," +
+                "i.institute_id, i.institute_name, p.project_scientificcoordinator, p.project_operator, p.project_operator_delegate" +
                 " from (" +
-                "select o.object_id_identity, b.stage, b.status, b.budget_id,b.requester, b.year, b.project, b.creation_date, e.mask, CASE WHEN mask=32 and b.status in ('PENDING','UNDER_REVIEW') THEN true ELSE false END AS canEdit" +
+                "select o.object_id_identity, b.stage, b.status, b.budget_id, b.requester, b.year, b.project, b.creation_date, e.mask," +
+                "CASE WHEN mask=32 and b.status in ('PENDING','UNDER_REVIEW') THEN true ELSE false END AS canEdit" +
                 " from acl_entry e, acl_object_identity o, acl_sid s, budget_view b" +
-                " where e.acl_object_identity = o.id and o.object_id_identity=b.budget_id and e.sid = s.id and s.sid in ('"+SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString().toLowerCase()+"'"+(isAdmin ? ", 'ROLE_ADMIN'" : "")+" )" +
+                " where e.acl_object_identity = o.id and o.object_id_identity=b.budget_id and e.sid = s.id and " +
+                "s.sid in ('"+SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString().toLowerCase()+"'"+(isAdmin ? ", 'ROLE_ADMIN'" : "")+" )" +
                 ") d, project_view p, institute_view i, budget_view b" +
-                " where b.project = p.project_id AND p.project_institute = i.institute_id " +
-                " order by object_id_identity, canEdit desc";
+                " where d.project = p.project_id AND p.project_institute = i.institute_id  " +
+                " ";
 
         String viewQuery = "SELECT *, count(*) OVER() as totals FROM ("+aclEntriesQuery+") aclQ ";
 

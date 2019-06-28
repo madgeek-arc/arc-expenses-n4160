@@ -1,6 +1,9 @@
 package arc.expenses.n4160.service;
 
+import arc.expenses.n4160.config.stateMachine.BudgetStateMachineConfiguration;
 import arc.expenses.n4160.domain.Executive;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +15,9 @@ import java.util.List;
 
 @Service("poiService")
 public class POIServiceImpl {
+
+    private static Logger logger = LogManager.getLogger(POIServiceImpl.class);
+
 
     @Autowired
     private DataSource dataSource;
