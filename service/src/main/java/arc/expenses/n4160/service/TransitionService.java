@@ -441,6 +441,7 @@ public class TransitionService {
             StateContext<NormalStages, StageEvents> context,
             Stage stage,
             String stageString,
+            String fromStage,
             BaseInfo.Status status) throws Exception {
 
         HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);
@@ -480,7 +481,7 @@ public class TransitionService {
                 requestPaymentService.createPayment(request);
             }
             Project project = projectService.get(request.getProjectId());
-            updatingPermissions("5b","FINISHED",project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
+            updatingPermissions(fromStage,"FINISHED",project, "APPROVE", RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
             aclService.removeEdit(requestApproval.getId(),RequestApproval.class);
             requestService.update(request,request.getId());
         }
@@ -553,7 +554,7 @@ public class TransitionService {
         stage.setDate(new Date().toInstant().toEpochMilli());
         Request request = requestService.get(requestApproval.getRequestId());
 
-        modifyRequestApproval(context, stage, toStage, (toStage.equals(fromStage) ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
+        modifyRequestApproval(context, stage, toStage, fromStage,(toStage.equals("FINISHED") ? BaseInfo.Status.ACCEPTED : BaseInfo.Status.PENDING));
 
         if(toStage.equalsIgnoreCase("5b")){
             Project project = projectService.get(request.getProjectId());
@@ -602,7 +603,7 @@ public class TransitionService {
 
     public void rejectApproval(StateContext<NormalStages, StageEvents> context, Stage stage, String rejectedAt) throws Exception {
         stage.setDate(new Date().toInstant().toEpochMilli());
-        modifyRequestApproval(context, stage,rejectedAt, BaseInfo.Status.REJECTED);
+        modifyRequestApproval(context, stage,rejectedAt, "",BaseInfo.Status.REJECTED);
     }
 
     public void rejectPayment(StateContext<NormalStages, StageEvents> context,Stage stage, String rejectedAt) throws Exception {
@@ -622,7 +623,7 @@ public class TransitionService {
         }
         try {
             Request request = requestService.get(requestApproval.getRequestId());
-            modifyRequestApproval(context, stage,toStage, BaseInfo.Status.UNDER_REVIEW);
+            modifyRequestApproval(context, stage,toStage,"", BaseInfo.Status.UNDER_REVIEW);
             Project project = projectService.get(request.getProjectId());
             updatingPermissions(fromStage,toStage,project,"Downgrade",RequestApproval.class,requestApproval.getId(), stage.getDate()+"");
         } catch (Exception e) {
@@ -828,11 +829,11 @@ public class TransitionService {
                     grantAccess.add(new PrincipalSid(delegate.getEmail()));
                 });
 
-                grantWrite.add(new PrincipalSid(diataktis.getEmail()));
-                String finalRequester1 = requester;
-                diataktis.getDelegates().forEach(delegate -> {
-                    if(!finalRequester1.equalsIgnoreCase(delegate.getEmail()))
-                        grantWrite.add(new PrincipalSid(delegate.getEmail()));
+                project.getOperator().forEach(operator -> {
+                    grantWrite.add(new PrincipalSid(operator.getEmail()));
+                    operator.getDelegates().forEach(delegate -> {
+                        grantWrite.add(new PrincipalSid(operator.getEmail()));
+                    });
                 });
                 break;
             case "6":

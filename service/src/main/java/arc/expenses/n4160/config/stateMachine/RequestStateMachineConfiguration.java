@@ -328,7 +328,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                             }
                             Stage3 stage3 = new Stage3(true,true,true);
                             stage3.setDate(new Date().toInstant().toEpochMilli());
-                            transitionService.approveApproval(context,"3","3",stage3);
+                            transitionService.approveApproval(context,"3","FINISHED",stage3);
                         } catch (Exception e) {
                             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));
@@ -383,7 +383,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
 
                             Stage5b stage5b = new Stage5b(true);
                             stage5b.setDate(new Date().toInstant().toEpochMilli());
-                            transitionService.approveApproval(context,"5b","5b",stage5b);
+                            transitionService.approveApproval(context,"5b","FINISHED",stage5b);
                         } catch (Exception e) {
                             logger.error("Error occurred on approval of request " + requestApproval.getId(),e);
                             context.getStateMachine().setStateMachineError(new ServiceException(e.getMessage()));

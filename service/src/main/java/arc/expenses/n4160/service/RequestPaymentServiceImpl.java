@@ -57,7 +57,7 @@ public class RequestPaymentServiceImpl extends GenericService<RequestPayment> {
     private InstituteServiceImpl instituteService;
 
     @Autowired
-    private OrganizationServiceImpl organizationService;
+    private BudgetServiceImpl budgetService;
 
     @Autowired
     private AclService aclService;
@@ -247,6 +247,20 @@ public class RequestPaymentServiceImpl extends GenericService<RequestPayment> {
         requestResponse.setInstituteName(institute.getName());
         requestResponse.setRequesterFullName(request.getUser().getFirstname() + " " + request.getUser().getLastname());
         requestResponse.setRequesterEmail(request.getUser().getEmail());
+
+        Budget budget = budgetService.get(request.getBudgetId());
+        if(request.getType().equals(Request.Type.REGULAR))
+            requestResponse.setTotal(budget.getRegularAmount());
+        else if(request.getType().equals(Request.Type.CONTRACT))
+            requestResponse.setTotal(budget.getContractAmount());
+        else if(request.getType().equals(Request.Type.SERVICES_CONTRACT))
+            requestResponse.setTotal(budget.getServicesContractAmount());
+        else if(request.getType().equals(Request.Type.TRIP))
+            requestResponse.setTotal(budget.getTripAmount());
+
+        requestResponse.setPaid((double) budgetService.getAmountPerType(budget,request.getType().value()));
+        requestResponse.setBudgetId(budget.getId());
+
         if(request.getOnBehalfOf()!=null) {
             requestResponse.setOnBehalfFullName(request.getOnBehalfOf().getFirstname() + " " + request.getOnBehalfOf().getLastname());
             requestResponse.setOnBehalfEmail(request.getOnBehalfOf().getEmail());
