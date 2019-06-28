@@ -2,6 +2,7 @@ package arc.expenses.n4160.domain;
 
 import arc.athenarc.n4160.domain.*;
 
+import java.util.List;
 import java.util.Map;
 
 public class BudgetResponse {
@@ -26,6 +27,7 @@ public class BudgetResponse {
     private Stage6 stage6;
     private Attachment boardDecision;
     private Attachment technicalReport;
+    private List<Attachment> additionalBoardDecisions;
     private boolean canEdit;
     private boolean canEditPrevious;
 
@@ -205,5 +207,13 @@ public class BudgetResponse {
 
     public void setCanEditPrevious(boolean canEditPrevious) {
         this.canEditPrevious = canEditPrevious;
+    }
+
+    public List<Attachment> getAdditionalBoardDecisions() {
+        return additionalBoardDecisions;
+    }
+
+    public void setAdditionalBoardDecisions(List<Attachment> additionalBoardDecisions) {
+        this.additionalBoardDecisions = additionalBoardDecisions;
     }
 }

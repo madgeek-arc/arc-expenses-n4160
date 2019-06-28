@@ -518,6 +518,7 @@ public class BudgetServiceImpl extends GenericService<Budget> {
         budgetResponse.setStage6(budget.getStage6());
         budgetResponse.setBoardDecision(budget.getBoardDecision());
         budgetResponse.setTechnicalReport(budget.getTechnicalReport());
+        budgetResponse.setAdditionalBoardDecisions(budget.getAdditionalBoardDecisions());
         budgetResponse.setCanEdit(hasPermission(budget.getId(),32));
         budgetResponse.setCanEditPrevious(hasPermission(budget.getId(),2));
 
