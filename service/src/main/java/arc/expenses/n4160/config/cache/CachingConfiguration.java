@@ -32,6 +32,8 @@ public class CachingConfiguration {
       jedisConnectionFactory.setPort(redisPort);
       jedisConnectionFactory.setPassword(redisPassword);
       jedisConnectionFactory.setUsePool(true);
+      jedisConnectionFactory.getPoolConfig().setMaxIdle(30);
+      jedisConnectionFactory.getPoolConfig().setMinIdle(10);
 
       return jedisConnectionFactory;
    }
