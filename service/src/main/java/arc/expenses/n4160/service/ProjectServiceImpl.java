@@ -193,7 +193,6 @@ public class ProjectServiceImpl extends GenericService<Project> {
     }
 
     @Override
-    @CacheEvict(value = "executives", allEntries = true)
     public Project update(Project project, Authentication authentication) throws ResourceNotFoundException {
         update(project,project.getId());
         return project;

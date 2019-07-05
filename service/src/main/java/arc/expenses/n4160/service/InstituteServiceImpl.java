@@ -47,7 +47,6 @@ public class InstituteServiceImpl extends GenericService<Institute>{
     }
 
     @Override
-    @CacheEvict(value = "executives", allEntries = true)
     public Institute update(Institute institute, Authentication authentication) throws ResourceNotFoundException {
         update(institute,institute.getId());
         return institute;
