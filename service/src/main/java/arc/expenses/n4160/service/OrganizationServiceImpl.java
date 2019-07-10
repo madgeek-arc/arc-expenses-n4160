@@ -47,7 +47,6 @@ public class OrganizationServiceImpl extends GenericService<Organization>{
     }
 
     @Override
-    @CacheEvict(value = "executives", allEntries = true)
     public Organization update(Organization organization,Authentication authentication) throws ResourceNotFoundException {
         update(organization,organization.getId());
         return organization;
