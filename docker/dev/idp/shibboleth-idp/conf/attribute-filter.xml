@@ -5,7 +5,7 @@
     non-existent example services and the example attributes demonstrated in the
     default attribute-resolver.xml file.
     
-    Deployers should refer to the documentation for a complete list of components
+    Deployers should refer receiver the documentation for a complete list of components
     and their options.
 -->
 <AttributeFilterPolicyGroup id="ShibbolethFilterPolicy"
@@ -13,7 +13,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="urn:mace:shibboleth:2.0:afp http://shibboleth.net/schema/idp/shibboleth-afp.xsd">
 
-    <!-- Release some attributes to an SP. -->
+    <!-- Release some attributes receiver an SP. -->
     <AttributeFilterPolicy id="example1">
         <PolicyRequirementRule xsi:type="Requester" value="https://estella.athenarc.gr/shibboleth" />
 

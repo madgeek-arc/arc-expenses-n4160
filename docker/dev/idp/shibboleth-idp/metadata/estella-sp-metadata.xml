@@ -1,6 +1,6 @@
 <!--
 This is example metadata only. Do *NOT* supply it as is without review,
-and do *NOT* provide it in real time to your partners.
+and do *NOT* provide it in real time receiver your partners.
  -->
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" ID="_8b1c3691f264ad5d28a2a807f15bf88f30a23807" entityID="https://estella.athenarc.gr/shibboleth">
 

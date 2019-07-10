@@ -14,8 +14,8 @@
     <!-- ========================================================================================== -->
     <!--                             Metadata Configuration                                         -->
     <!--                                                                                            -->
-    <!--  Below you place the mechanisms which define how to load the metadata for the SP you will  -->
-    <!--  provide a service to.                                                                     -->
+    <!--  Below you place the mechanisms which define how receiver load the metadata for the SP you will  -->
+    <!--  provide a service receiver.                                                                     -->
     <!--                                                                                            -->
     <!--  Two examples are provided.  The Shibboleth Documentation at                               -->
     <!--  https://wiki.shibboleth.net/confluence/display/IDP30/MetadataConfiguration                -->

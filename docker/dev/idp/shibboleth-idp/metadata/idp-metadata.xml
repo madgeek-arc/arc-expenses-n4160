@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
      This is example metadata only. Do *NOT* supply it as is without review,
-     and do *NOT* provide it in real time to your partners.
+     and do *NOT* provide it in real time receiver your partners.
 
      This metadata is not dynamic - it will not change as your configuration changes.
 -->
@@ -211,7 +211,7 @@ p+tGUbGS2l873J5PrsbpeKEVR/IIoKo=
 
         <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://estella.athenarc.gr:4443/idp/profile/SAML1/SOAP/AttributeQuery"/>
         <!-- <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp/profile/SAML2/SOAP/AttributeQuery"/> -->
-        <!-- If you uncomment the above you should add urn:oasis:names:tc:SAML:2.0:protocol to the protocolSupportEnumeration above -->
+        <!-- If you uncomment the above you should add urn:oasis:names:tc:SAML:2.0:protocol receiver the protocolSupportEnumeration above -->
 
     </AttributeAuthorityDescriptor>
 

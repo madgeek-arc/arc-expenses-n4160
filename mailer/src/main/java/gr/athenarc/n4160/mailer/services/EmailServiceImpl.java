@@ -39,7 +39,7 @@ public class EmailServiceImpl implements EmailService {
                 helper.setFrom(mailMessage.getFrom(), mailMessage.getFromName());
                 helper.setTo(mailMessage.getTo());
                 helper.setSubject(mailMessage.getSubject());
-                javaMailSender.send(mimeMessage);
+//                javaMailSender.send(mimeMessage);
             } catch (MessagingException | IOException e) {
                 logger.error("Could not send message", e);
             }

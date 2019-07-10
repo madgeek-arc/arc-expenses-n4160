@@ -395,7 +395,7 @@ public class RequestStateMachineConfiguration extends EnumStateMachineConfigurer
                     .source(NormalStages.Stage5b)
                     .target(NormalStages.Stage5b)
                     .event(StageEvents.EDIT)
-                    .guard(stateContext -> transitionService.checkContains(stateContext, Stage5a.class))
+                    .guard(stateContext -> transitionService.checkContains(stateContext, Stage3.class))
                     .action(context -> {
                         RequestApproval requestApproval = context.getMessage().getHeaders().get("requestApprovalObj", RequestApproval.class);
                         HttpServletRequest req = context.getMessage().getHeaders().get("restRequest", HttpServletRequest.class);

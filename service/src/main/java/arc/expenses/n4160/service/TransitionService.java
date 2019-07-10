@@ -166,7 +166,6 @@ public class TransitionService {
         stage.setComment(comment);
         stage.setAttachments(exportAttachments(request.getArchiveId(),(MultipartHttpServletRequest) req, stage));
 
-
         if(stage instanceof Stage1)
             requestApproval.setStage1((Stage1) stage);
         else if(stage instanceof Stage2)
@@ -471,7 +470,7 @@ public class TransitionService {
         else if(stage instanceof Stage5b)
             requestApproval.setStage5b((Stage5b) stage);
 
-        requestApproval.setStage(stageString);
+        requestApproval.setStage((stageString.equals("FINISHED") ? fromStage : stageString));
         requestApproval.setStatus(status);
         if(status== BaseInfo.Status.ACCEPTED) {
             if(request.getType() == Request.Type.CONTRACT){
